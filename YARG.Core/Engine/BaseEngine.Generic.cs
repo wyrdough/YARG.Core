@@ -892,15 +892,17 @@ namespace YARG.Core.Engine
 
                 // Try to find a solo end
                 int soloNoteCount = GetNumberOfNotes(start);
+                double startTime = start.Time;
                 for (int j = i + 1; j < Notes.Count; j++)
                 {
                     var end = Notes[j];
 
                     soloNoteCount += GetNumberOfNotes(end);
+                    double endTime = end.TimeEnd;
 
                     if (!end.IsSoloEnd) continue;
 
-                    soloSections.Add(new SoloSection(soloNoteCount));
+                    soloSections.Add(new SoloSection(soloNoteCount, startTime, endTime));
 
                     // Move i to the end of the solo section
                     i = j;
