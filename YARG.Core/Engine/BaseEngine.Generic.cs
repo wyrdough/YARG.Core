@@ -896,7 +896,7 @@ namespace YARG.Core.Engine
                         }
                         curr = Notes[++i];
                     }
-                    soloSections.Add(new SoloSection(start.Tick, curr.Tick, start.Time, start.TimeEnd, soloNoteCount));
+                    soloSections.Add(new SoloSection(start.Tick, curr.Tick, start.Time, curr.TimeEnd, soloNoteCount));
                 }
             }
 
