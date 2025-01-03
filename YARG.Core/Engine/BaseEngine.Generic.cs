@@ -948,6 +948,10 @@ namespace YARG.Core.Engine
                     // Temporary fix by adding a check for the last measure
                     // Affects 1/1 time signatures
                     int curMeasureIndex = allMeasureBeatLines.GetIndexOfPrevious(noteOneTickEnd);
+                    if (curMeasureIndex < 0)
+                    {
+                        curMeasureIndex = 0;
+                    }
                     if (allMeasureBeatLines[curMeasureIndex].Tick < noteOneTickEnd
                         && curMeasureIndex + 1 < allMeasureBeatLines.Count)
                     {
