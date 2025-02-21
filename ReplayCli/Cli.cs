@@ -15,6 +15,9 @@ public partial class Cli
     private string _replayPath;
     private AnalyzerMode _runMode;
 
+    private int _framesPerSecond;
+    private int _frameIndex;
+
     private ReplayInfo _replayInfo;
     private ReplayData _replayData;
 
@@ -72,6 +75,32 @@ public partial class Cli
                     if (!Directory.Exists(_songPath))
                     {
                         Console.WriteLine("ERROR: Song folder does not exist!");
+                    }
+
+                    break;
+                }
+                case "--fps":
+                case "-f":
+                {
+                    i++;
+
+                    if (!int.TryParse(args[i], out _framesPerSecond))
+                    {
+                        Console.WriteLine("ERROR: Invalid FPS value!");
+                        _framesPerSecond = 0;
+                    }
+
+                    break;
+                }
+                case "--frameindex":
+                case "-fi":
+                {
+                    i++;
+
+                    if (!int.TryParse(args[i], out _frameIndex))
+                    {
+                        Console.WriteLine("ERROR: Invalid frame index!");
+                        _frameIndex = -1;
                     }
 
                     break;
@@ -200,6 +229,9 @@ public partial class Cli
         Console.WriteLine($"Base stats:");
         PrintStatDifference("CommittedScore",         originalStats.CommittedScore,         resultStats.CommittedScore);
         PrintStatDifference("PendingScore",           originalStats.PendingScore,           resultStats.PendingScore);
+        PrintStatDifference("NoteScore",              originalStats.NoteScore,              resultStats.NoteScore);
+        PrintStatDifference("SustainScore",           originalStats.SustainScore,           resultStats.SustainScore);
+        PrintStatDifference("MultiplierScore",        originalStats.MultiplierScore,        resultStats.MultiplierScore);
         PrintStatDifference("TotalScore",             originalStats.TotalScore,             resultStats.TotalScore);
         PrintStatDifference("StarScore",              originalStats.StarScore,              resultStats.StarScore);
         PrintStatDifference("Combo",                  originalStats.Combo,                  resultStats.Combo);
@@ -210,6 +242,7 @@ public partial class Cli
         PrintStatDifference("NotesMissed",            originalStats.NotesMissed,            resultStats.NotesMissed);
         PrintStatDifference("Percent",                originalStats.Percent,                resultStats.Percent);
         PrintStatDifference("StarPowerTickAmount",    originalStats.StarPowerTickAmount,    resultStats.StarPowerTickAmount);
+        PrintStatDifference("StarPowerWhammyTicks",   originalStats.StarPowerWhammyTicks,   resultStats.StarPowerWhammyTicks);
         PrintStatDifference("TotalStarPowerTicks",    originalStats.TotalStarPowerTicks,    resultStats.TotalStarPowerTicks);
         PrintStatDifference("TimeInStarPower",        originalStats.TimeInStarPower,        resultStats.TimeInStarPower);
         PrintStatDifference("IsStarPowerActive",      originalStats.IsStarPowerActive,      resultStats.IsStarPowerActive);
@@ -229,14 +262,17 @@ public partial class Cli
                 PrintStatDifference("Overstrums",             originalGuitar.Overstrums,             resultGuitar.Overstrums);
                 PrintStatDifference("HoposStrummed",          originalGuitar.HoposStrummed,          resultGuitar.HoposStrummed);
                 PrintStatDifference("GhostInputs",            originalGuitar.GhostInputs,            resultGuitar.GhostInputs);
-                PrintStatDifference("StarPowerWhammyTicks",   originalGuitar.StarPowerWhammyTicks,   resultGuitar.StarPowerWhammyTicks);
-                PrintStatDifference("SustainScore",           originalGuitar.SustainScore,           resultGuitar.SustainScore);
                 break;
             }
             case (DrumsStats originalDrums, DrumsStats resultDrums):
             {
                 Console.WriteLine("Drums stats:");
                 PrintStatDifference("Overhits",      originalDrums.Overhits,      resultDrums.Overhits);
+                PrintStatDifference("GhostsHit",     originalDrums.GhostsHit,     resultDrums.GhostsHit);
+                PrintStatDifference("TotalGhosts",   originalDrums.TotalGhosts,   resultDrums.TotalGhosts);
+                PrintStatDifference("AccentsHit",    originalDrums.AccentsHit,    resultDrums.AccentsHit);
+                PrintStatDifference("TotalAccents",  originalDrums.TotalAccents,  resultDrums.TotalAccents);
+                PrintStatDifference("DynamicsBonus", originalDrums.DynamicsBonus, resultDrums.DynamicsBonus);
                 break;
             }
             case (VocalsStats originalVocals, VocalsStats resultVocals):
@@ -251,6 +287,7 @@ public partial class Cli
             {
                 Console.WriteLine("Pro Keys stats:");
                 PrintStatDifference("Overhits",      originalKeys.Overhits,      resultKeys.Overhits);
+                PrintStatDifference("FatFingersIgnored", originalKeys.FatFingersIgnored, resultKeys.FatFingersIgnored);
                 break;
             }
             default:

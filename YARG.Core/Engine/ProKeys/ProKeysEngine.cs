@@ -9,6 +9,7 @@ namespace YARG.Core.Engine.ProKeys
         ProKeysStats>
     {
         protected const double DEFAULT_PRESS_TIME = -9999;
+        protected const int POINTS_PER_PRO_KEYS_NOTE = 120;
 
         public delegate void KeyStateChangeEvent(int key, bool isPressed);
         public delegate void OverhitEvent(int key);
@@ -27,12 +28,12 @@ namespace YARG.Core.Engine.ProKeys
         /// <summary>
         /// The integer value for the key that was hit this update. <c>null</c> is none.
         /// </summary>
-        protected int? KeyHit;
+        protected int? KeyHitThisUpdate;
 
         /// <summary>
         /// The integer value for the key that was released this update. <c>null</c> is none.
         /// </summary>
-        protected int? KeyReleased;
+        protected int? KeyReleasedThisUpdate;
 
         protected int? FatFingerKey;
 
@@ -95,8 +96,8 @@ namespace YARG.Core.Engine.ProKeys
                 KeyPressTimes[i] = -9999;
             }
 
-            KeyHit = null;
-            KeyReleased = null;
+            KeyHitThisUpdate = null;
+            KeyReleasedThisUpdate = null;
 
             FatFingerKey = null;
 
@@ -257,12 +258,26 @@ namespace YARG.Core.Engine.ProKeys
                 StripStarPower(note);
             }
 
-            if (note.IsSoloEnd && note.ParentOrSelf.WasFullyHitOrMissed())
+            if (note is { IsSoloStart: true, IsSoloEnd: true } && note.ParentOrSelf.WasFullyHitOrMissed())
+            {
+                // While a solo is active, end the current solo and immediately start the next.
+                if (IsSoloActive)
+                {
+                    EndSolo();
+                    StartSolo();
+                }
+                else
+                {
+                    // If no solo is currently active, start and immediately end the solo.
+                    StartSolo();
+                    EndSolo();
+                }
+            }
+            else if (note.IsSoloEnd && note.ParentOrSelf.WasFullyHitOrMissed())
             {
                 EndSolo();
             }
-
-            if (note.IsSoloStart)
+            else if (note.IsSoloStart)
             {
                 StartSolo();
             }
@@ -287,8 +302,8 @@ namespace YARG.Core.Engine.ProKeys
 
         protected override void AddScore(ProKeysNote note)
         {
-            AddScore(POINTS_PER_PRO_NOTE);
-            EngineStats.NoteScore += POINTS_PER_NOTE;
+            AddScore(POINTS_PER_PRO_KEYS_NOTE);
+            EngineStats.NoteScore += POINTS_PER_PRO_KEYS_NOTE;
         }
 
         protected sealed override int CalculateBaseScore()
@@ -296,7 +311,7 @@ namespace YARG.Core.Engine.ProKeys
             int score = 0;
             foreach (var note in Notes)
             {
-                score += POINTS_PER_PRO_NOTE * (1 + note.ChildNotes.Count);
+                score += POINTS_PER_PRO_KEYS_NOTE * (1 + note.ChildNotes.Count);
 
                 foreach (var child in note.AllNotes)
                 {

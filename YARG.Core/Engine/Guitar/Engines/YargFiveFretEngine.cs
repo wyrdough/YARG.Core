@@ -72,6 +72,7 @@ namespace YARG.Core.Engine.Guitar.Engines
             }
             else if (action is GuitarAction.Whammy)
             {
+                LastWhammyTimerState = StarPowerWhammyTimer.IsActive;
                 StarPowerWhammyTimer.Start(gameInput.Time);
             }
             else if (action is GuitarAction.StrumDown or GuitarAction.StrumUp && gameInput.Button)
@@ -104,7 +105,6 @@ namespace YARG.Core.Engine.Guitar.Engines
 
         protected override void UpdateHitLogic(double time)
         {
-            UpdateStarPower();
             UpdateTimers();
 
             bool strumEatenByHopo = false;
