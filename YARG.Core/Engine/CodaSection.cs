@@ -63,7 +63,8 @@ namespace YARG.Core.Engine
             }
 
             // Collect bonus for this lane
-            int bonusScore = (int) Math.Floor((Math.Min(time - LastCollectedTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME) * MaxLaneScore);
+
+            int bonusScore = GetCurrentLaneScore(fret, time);
             TotalCodaBonus += bonusScore;
 
             LastCollectedTime[fret] = time;
@@ -73,6 +74,11 @@ namespace YARG.Core.Engine
         {
             Success = false;
             // TotalCodaBonus = 0;
+        }
+
+        public int GetCurrentLaneScore(int fret, double time)
+        {
+            return (int) Math.Floor((Math.Min(time - LastCollectedTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME) * MaxLaneScore);
         }
     }
 }

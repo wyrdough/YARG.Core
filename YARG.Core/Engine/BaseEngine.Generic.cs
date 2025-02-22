@@ -409,6 +409,13 @@ namespace YARG.Core.Engine
 
         protected virtual void HitNote(TNoteType note)
         {
+            // If this is the last note of the chart and there was a successful coda, award coda bonus
+            if (CodaHasStarted && NoteIndex == Notes.Count - 1 && Codas[CurrentCodaIndex - 1].Success)
+            {
+                EngineStats.CodaBonuses += Codas[CurrentCodaIndex - 1].TotalCodaBonus;
+                OnCodaEnd?.Invoke(Codas[CurrentCodaIndex - 1]);
+            }
+
             if (note.ParentOrSelf.WasFullyHitOrMissed())
             {
                 AdvanceToNextNote(note);
@@ -909,16 +916,10 @@ namespace YARG.Core.Engine
 
         protected void EndCoda()
         {
-            // TODO: We don't actually know this yet, find somewhere else to do it
-            if (Codas[CurrentCodaIndex].Success)
-            {
-                EngineStats.CodaBonuses += Codas[CurrentCodaIndex].TotalCodaBonus;
-            }
-
             YargLogger.LogFormatDebug("Coda ended at time {0} with bonus score {1}", CurrentTime, Codas[CurrentCodaIndex].TotalCodaBonus);
 
             IsCodaActive = false;
-            OnCodaEnd?.Invoke(Codas[CurrentCodaIndex]);
+            // OnCodaEnd?.Invoke(Codas[CurrentCodaIndex]);
             CurrentCodaIndex++;
         }
 
