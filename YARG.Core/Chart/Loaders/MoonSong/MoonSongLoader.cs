@@ -181,6 +181,7 @@ namespace YARG.Core.Chart
                 {
                     MoonPhrase.Type.Starpower           => PhraseType.StarPower,
                     MoonPhrase.Type.Solo                => PhraseType.Solo,
+                    MoonPhrase.Type.BigRockEnding       => PhraseType.BigRockEnding,
                     MoonPhrase.Type.Versus_Player1      => PhraseType.VersusPlayer1,
                     MoonPhrase.Type.Versus_Player2      => PhraseType.VersusPlayer2,
                     MoonPhrase.Type.TremoloLane         => PhraseType.TremoloLane,

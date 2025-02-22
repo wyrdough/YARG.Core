@@ -106,6 +106,7 @@ namespace YARG.Core.Engine
             }
 
             Solos = GetSoloSections();
+            Codas = GetCodaSections();
         }
 
         protected override void GenerateQueuedUpdates(double nextTime)
@@ -273,6 +274,23 @@ namespace YARG.Core.Engine
             while (NextSyncIndex < SyncTrackChanges.Count && CurrentTick >= SyncTrackChanges[NextSyncIndex].Tick)
             {
                 CurrentSyncIndex++;
+            }
+
+            // TODO: I'm not sure if this is the best place for this?
+            // Check to see if a coda has started or ended
+            if (CurrentCodaIndex < Codas.Count)
+            {
+                if (time >= Codas[CurrentCodaIndex].StartTime && !IsCodaActive)
+                {
+                    YargLogger.LogFormatDebug("Starting Coda at time {0}", time);
+                    StartCoda();
+                }
+
+                if (time >= Codas[CurrentCodaIndex].EndTime && IsCodaActive)
+                {
+                    YargLogger.LogFormatDebug("Ending Coda at time {0}", time);
+                    EndCoda();
+                }
             }
 
             // Only check for WaitCountdowns in this chart if there are any remaining
@@ -459,6 +477,12 @@ namespace YARG.Core.Engine
 
         protected virtual void MissNote(TNoteType note)
         {
+            // No need to check if we're still in a coda section here because we won't get called if we are
+            if (CodaHasStarted)
+            {
+                Codas[CurrentCodaIndex].MissNote();
+            }
+
             if (note.ParentOrSelf.WasFullyHitOrMissed())
             {
                 AdvanceToNextNote(note);
@@ -871,6 +895,33 @@ namespace YARG.Core.Engine
             CurrentSoloIndex++;
         }
 
+        protected void StartCoda()
+        {
+            if (CurrentCodaIndex >= Codas.Count)
+            {
+                return;
+            }
+
+            IsCodaActive = true;
+            CodaHasStarted = true;
+            OnCodaStart?.Invoke(Codas[CurrentCodaIndex]);
+        }
+
+        protected void EndCoda()
+        {
+            // TODO: We don't actually know this yet, find somewhere else to do it
+            if (Codas[CurrentCodaIndex].Success)
+            {
+                EngineStats.CodaBonuses += Codas[CurrentCodaIndex].TotalCodaBonus;
+            }
+
+            YargLogger.LogFormatDebug("Coda ended at time {0} with bonus score {1}", CurrentTime, Codas[CurrentCodaIndex].TotalCodaBonus);
+
+            IsCodaActive = false;
+            OnCodaEnd?.Invoke(Codas[CurrentCodaIndex]);
+            CurrentCodaIndex++;
+        }
+
         protected override void UpdateProgressValues(uint tick)
         {
             base.UpdateProgressValues(tick);
@@ -1107,6 +1158,27 @@ namespace YARG.Core.Engine
                         break;
                 }
             }
+        }
+
+        // For the moment, there is really only one of these, but there is
+        // a possibility that we may want multiple coda sections in the future
+        private List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                // TODO: Actually figure out the correct values for lanes and maxScore depending on game mode
+                codaSections.Add(new CodaSection(5, 150, phrase.Time, phrase.TimeEnd));
+            }
+
+            return codaSections;
         }
 
         protected void GetWaitCountdowns(List<TNoteType> notes)

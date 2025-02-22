@@ -12,6 +12,7 @@ namespace MoonscraperChartEditor.Song
         {
             Starpower,
             Solo,
+            BigRockEnding,
 
             Versus_Player1,
             Versus_Player2,
