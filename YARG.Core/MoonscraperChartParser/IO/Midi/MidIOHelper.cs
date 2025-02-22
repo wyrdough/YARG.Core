@@ -73,6 +73,15 @@ namespace MoonscraperChartEditor.Song.IO
         public const byte DRUM_FILL_NOTE_3 = 123;
         public const byte DRUM_FILL_NOTE_4 = 124;
 
+        // https://docs.c3universe.com/rbndocs/index.php?title=Overdrive_and_Big_Rock_Endings
+        //  Repeating ourselves for the sake of readability elsewhere
+        public const byte PRO_KEYS_BIG_ROCK_ENDING_NOTE = 120;
+        public const byte BIG_ROCK_ENDING_NOTE_1        = 120;
+        public const byte BIG_ROCK_ENDING_NOTE_2        = 121;
+        public const byte BIG_ROCK_ENDING_NOTE_3        = 122;
+        public const byte BIG_ROCK_ENDING_NOTE_4        = 123;
+        public const byte BIG_ROCK_ENDING_NOTE_5        = 124;
+
         // Drum rolls - http://docs.c3universe.com/rbndocs/index.php?title=Drum_Authoring#Drum_Rolls
         public const byte TREMOLO_LANE_NOTE = 126;
         public const byte TRILL_LANE_NOTE = 127;

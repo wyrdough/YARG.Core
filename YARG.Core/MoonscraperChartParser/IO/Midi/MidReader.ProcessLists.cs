@@ -391,6 +391,12 @@ namespace MoonscraperChartEditor.Song.IO
                 });
             }
 
+            // TODO: May need to wrap this in a settings check?
+            //  also probably need to handle the fact that there are 4 of these
+            processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_1, (ref EventProcessParams eventProcessParams) => {
+                ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+            });
+
             if (settings.lanePhrases)
             {
                 static void ProcessLanePhrase(ref EventProcessParams processParams, MoonPhrase.Type phraseType)
@@ -773,6 +779,11 @@ namespace MoonscraperChartEditor.Song.IO
                 { MidIOHelper.TRILL_LANE_NOTE, (ref EventProcessParams eventProcessParams) =>
                     ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams,
                         MoonPhrase.Type.TrillLane, eventProcessParams.trackDifficulty)
+                },
+                {
+                    MidIOHelper.PRO_KEYS_BIG_ROCK_ENDING_NOTE, (ref EventProcessParams eventProcessParams) =>
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams,
+                            MoonPhrase.Type.BigRockEnding, eventProcessParams.trackDifficulty)
                 },
             };
 
