@@ -428,6 +428,22 @@ namespace YARG.Core.Chart
             return totalLastTick;
         }
 
+        public TextEvent? GetCodaEvent()
+        {
+            // TODO: This needs rework to handle multiple coda events
+            // Search in reverse since it should be near the end
+            for (int i = GlobalEvents.Count - 1; i >= 0; i--)
+            {
+                var text = GlobalEvents[i];
+                if (text.Text == TextEvents.BIG_ROCK_ENDING_START)
+                {
+                    return text;
+                }
+            }
+
+            return null;
+        }
+
         public TextEvent? GetEndEvent()
         {
             // Reverse-search through a limited amount of events

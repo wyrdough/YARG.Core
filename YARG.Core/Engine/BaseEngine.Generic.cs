@@ -533,7 +533,8 @@ namespace YARG.Core.Engine
             // No need to check if we're still in a coda section here because we won't get called if we are
             if (CodaHasStarted)
             {
-                Codas[CurrentCodaIndex].MissNote();
+                // -1 because the coda is over and the index has been incremented if we reach this point
+                Codas[CurrentCodaIndex - 1].MissNote();
             }
 
             if (note.ParentOrSelf.WasFullyHitOrMissed())
@@ -1150,10 +1151,10 @@ namespace YARG.Core.Engine
 
         // For the moment, there is really only one of these, but there is
         // a possibility that we may want multiple coda sections in the future
-        private List<CodaSection> GetCodaSections()
+        // TODO: Make this abstract and put a GetCodaSections implementation in all engines
+        protected virtual List<CodaSection> GetCodaSections()
         {
             var codaSections = new List<CodaSection>();
-
 
             foreach (var phrase in Chart.Phrases)
             {
@@ -1163,7 +1164,7 @@ namespace YARG.Core.Engine
                 }
 
                 // TODO: Actually figure out the correct values for lanes and maxScore depending on game mode
-                codaSections.Add(new CodaSection(5, 150, phrase.Time, phrase.TimeEnd));
+                codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
             }
 
             return codaSections;

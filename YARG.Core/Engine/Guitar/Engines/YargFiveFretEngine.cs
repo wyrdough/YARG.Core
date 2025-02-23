@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using YARG.Core.Chart;
 using YARG.Core.Input;
 using YARG.Core.Logging;
@@ -559,6 +560,23 @@ namespace YARG.Core.Engine.Guitar.Engines
             }
 
             return msbIndex;
+        }
+
+        protected override List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
+            }
+
+            return codaSections;
         }
     }
 }
