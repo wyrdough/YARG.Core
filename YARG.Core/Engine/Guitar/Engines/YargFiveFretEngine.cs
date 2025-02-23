@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using YARG.Core.Chart;
 using YARG.Core.Input;
 using YARG.Core.Logging;
@@ -156,8 +157,8 @@ namespace YARG.Core.Engine.Guitar.Engines
                 if (IsFretPress)
                 {
                     // Figure out which button was pressed
-                    changed = (byte) (ButtonMask ^ LastButtonMask);
-                    pressed = (byte) (changed & ButtonMask);
+                    changed = (byte) (EffectiveButtonMask ^ LastButtonMask);
+                    pressed = (byte) (changed & EffectiveButtonMask);
                 }
 
                 // Press the frets on the coda
@@ -281,7 +282,7 @@ namespace YARG.Core.Engine.Guitar.Engines
                         {
                             break;
                         }
-                        
+
                         MissNote(note);
                         YargLogger.LogFormatTrace("Missed note (Index: {0}, Mask: {1}) at {2}", i,
                             note.NoteMask, CurrentTime);
@@ -582,6 +583,36 @@ namespace YARG.Core.Engine.Guitar.Engines
             }
 
             return false;
+        }
+
+        private static int GetMostSignificantBit(int mask)
+        {
+            // Gets the most significant bit of the mask
+            var msbIndex = 0;
+            while (mask != 0)
+            {
+                mask >>= 1;
+                msbIndex++;
+            }
+
+            return msbIndex;
+        }
+
+        protected override List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
+            }
+
+            return codaSections;
         }
     }
 }

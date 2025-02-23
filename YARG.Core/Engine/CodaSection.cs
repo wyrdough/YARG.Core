@@ -20,7 +20,11 @@ namespace YARG.Core.Engine
         public int Lanes { get; private set; }
 
         // Last time bonus was collected for given lane
-        public double[] LastCollectedTime { get; private set; }
+        private double[] LastCollectedTime { get; set; }
+
+        // We need this because collected and hit are different for non-guitar instruments
+        private double[] LastHitTime { get; set; }
+
         // Maximum bonus for one fret press or drum hit
         public int MaxLaneScore { get; private set; }
 
@@ -32,29 +36,32 @@ namespace YARG.Core.Engine
 
         public bool Success { get; private set; }
 
+        private bool _fretMode = true;
+
         private const int MAX_DRUM_SCORE  = 750;
         private const int MAX_FRET_SCORE  = 150;
 
         // Time taken for bonus to recharge after collection
         private const double BONUS_RECHARGE_TIME = 1.5;
 
-        public CodaSection(int lanes, int maxScore, double startTime, double endTime)
+        public CodaSection(int lanes, double startTime, double endTime, bool fretMode = true)
         {
             Lanes = lanes;
             LastCollectedTime = new double[lanes];
-            MaxLaneScore = maxScore;
+            LastHitTime = new double[lanes];
+            MaxLaneScore = fretMode ? MAX_FRET_SCORE : MAX_DRUM_SCORE;
             TotalCodaBonus = 0;
             StartTime = startTime;
             EndTime = endTime;
+            _fretMode = fretMode;
             // MissNote will change this if necessary
             Success = true;
         }
 
-        // When called for drums, the default is fine, as there is only one lane
         // Five fret instruments should pass something that can be interpreted as
         // a lane index. (We could take a GuitarAction or DrumsAction here, but
         // then we'd have to be a generic for no good reason)
-        public void HitLane(double time, int fret = 0)
+        public void HitLane(double time, int fret)
         {
             // Discard values that don't correspond to a lane
             if (fret < 0 || fret > Lanes - 1)
@@ -63,22 +70,36 @@ namespace YARG.Core.Engine
             }
 
             // Collect bonus for this lane
+            if (_fretMode)
+            {
+                int bonusScore = GetCurrentLaneScore(fret, time);
+                LastCollectedTime[fret] = time;
+                TotalCodaBonus += bonusScore;
+            }
+            else
+            {
+                // Non-fret instruments only have one scoring lane
+                int bonusScore = GetCurrentLaneScore(0, time);
+                LastCollectedTime[0] = time;
+                TotalCodaBonus += bonusScore;
+            }
 
-            int bonusScore = GetCurrentLaneScore(fret, time);
-            TotalCodaBonus += bonusScore;
-
-            LastCollectedTime[fret] = time;
+            LastHitTime[fret] = time;
         }
 
         public void MissNote()
         {
             Success = false;
-            // TotalCodaBonus = 0;
+            TotalCodaBonus = 0;
         }
 
         public int GetCurrentLaneScore(int fret, double time)
         {
             return (int) Math.Floor((Math.Min(time - LastCollectedTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME) * MaxLaneScore);
         }
+
+        public double GetTimeSinceLastHit(int fret, double time) => time - LastCollectedTime[fret];
+
+        public float GetLaneIntensity(int fret, double time) => (float) Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME);
     }
 }

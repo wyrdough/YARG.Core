@@ -30,10 +30,11 @@ namespace MoonscraperChartEditor.Song.IO
 
         private struct CommonPhraseSettings
         {
-            public int starPowerNote;
-            public int soloNote;
+            public int  starPowerNote;
+            public int  soloNote;
             public bool versusPhrases;
             public bool lanePhrases;
+            public bool brePhrases;
         }
 
         // These dictionaries map the NoteNumber of each midi note event to a specific function of how to process them
@@ -51,6 +52,7 @@ namespace MoonscraperChartEditor.Song.IO
             soloNote = MidIOHelper.SOLO_NOTE,
             versusPhrases = true,
             lanePhrases = true,
+            brePhrases = true,
         };
 
         private static readonly CommonPhraseSettings GhlGuitarPhraseSettings = new()
@@ -72,6 +74,7 @@ namespace MoonscraperChartEditor.Song.IO
             soloNote = MidIOHelper.SOLO_NOTE,
             versusPhrases = true,
             lanePhrases = true,
+            brePhrases = true,
         };
 
         private static readonly CommonPhraseSettings VocalsPhraseSettings = new()
@@ -85,6 +88,7 @@ namespace MoonscraperChartEditor.Song.IO
         {
             soloNote = MidIOHelper.SOLO_NOTE_PRO_KEYS,
             versusPhrases = false,
+            brePhrases = true, // TODO: Maybe not so hot of an idea?
             // lanePhrases = true, // Handled manually due to per-difficulty tracks
         };
 
@@ -391,11 +395,34 @@ namespace MoonscraperChartEditor.Song.IO
                 });
             }
 
-            // TODO: May need to wrap this in a settings check?
-            //  also probably need to handle the fact that there are 4 of these
-            processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_1, (ref EventProcessParams eventProcessParams) => {
-                ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
-            });
+            if (settings.brePhrases)
+            {
+                processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_1,
+                    (ref EventProcessParams eventProcessParams) =>
+                    {
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+                    });
+                processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_2,
+                    (ref EventProcessParams eventProcessParams) =>
+                    {
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+                    });
+                processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_3,
+                    (ref EventProcessParams eventProcessParams) =>
+                    {
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+                    });
+                processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_4,
+                    (ref EventProcessParams eventProcessParams) =>
+                    {
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+                    });
+                processMap.Add(MidIOHelper.BIG_ROCK_ENDING_NOTE_5,
+                    (ref EventProcessParams eventProcessParams) =>
+                    {
+                        ProcessNoteOnEventAsSpecialPhrase(ref eventProcessParams, MoonPhrase.Type.BigRockEnding);
+                    });
+            }
 
             if (settings.lanePhrases)
             {
