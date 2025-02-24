@@ -98,6 +98,17 @@ namespace YARG.Core.Engine
             TotalCodaBonus = 0;
         }
 
+        /// <summary>
+        /// Resets Coda state. Useful for replay rewind or practice mode restart.
+        /// </summary>
+        /// <param name="earnedBonus">Amount of Coda bonus earned up to the new song time.<br />Needed if rewinding into the middle of the Coda section.</param>
+        public void Reset(int earnedBonus = 0)
+        {
+            Success = true;
+            // TODO: Make sure we really need this
+            TotalCodaBonus = earnedBonus;
+        }
+
         public int GetCurrentLaneScore(int fret, double time)
         {
             return (int) Math.Floor((Math.Min(time - LastCollectedTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME) * MaxLaneScore);
@@ -105,11 +116,16 @@ namespace YARG.Core.Engine
 
         public double GetTimeSinceLastHit(int fret, double time) => time - LastCollectedTime[fret];
 
-        public float GetLaneIntensity(int fret, double time)
+        /// <summary>
+        /// Returns normalized time since last hit<br/>
+        /// Reaches 1.0f at BONUS_RECHARGE_TIME
+        /// </summary>
+        /// <param name="fret"></param>
+        /// <param name="time"></param>
+        /// <returns>float range 0.0f to 1.0f</returns>
+        public float GetNormalizedTimeSinceLastHit(int fret, double time)
         {
-            var normalizedTime =
-                (float) (Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME);
-            return (float) Math.Cos(Math.PI * normalizedTime) / 2;
+            return (float) (Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME);
         }
     }
 }
