@@ -38,6 +38,9 @@ namespace YARG.Core.Engine
 
         private bool _fretMode = true;
 
+        public delegate void LaneHitEvent(int lane);
+        public LaneHitEvent? OnLaneHit;
+
         private const int MAX_DRUM_SCORE  = 750;
         private const int MAX_FRET_SCORE  = 150;
 
@@ -85,6 +88,8 @@ namespace YARG.Core.Engine
             }
 
             LastHitTime[fret] = time;
+
+            OnLaneHit?.Invoke(fret);
         }
 
         public void MissNote()
@@ -100,6 +105,11 @@ namespace YARG.Core.Engine
 
         public double GetTimeSinceLastHit(int fret, double time) => time - LastCollectedTime[fret];
 
-        public float GetLaneIntensity(int fret, double time) => (float) (Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME);
+        public float GetLaneIntensity(int fret, double time)
+        {
+            var normalizedTime =
+                (float) (Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME);
+            return (float) Math.Cos(Math.PI * normalizedTime) / 2;
+        }
     }
 }

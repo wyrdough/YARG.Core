@@ -172,7 +172,7 @@ namespace YARG.Core.Engine.Drums.Engines
         protected override List<CodaSection> GetCodaSections()
         {
             var codaSections = new List<CodaSection>();
-            var lanes = EngineParameters.Mode == DrumsEngineParameters.DrumMode.FiveLane ? 5 : 4;
+            var lanes = EngineParameters.Mode == DrumsEngineParameters.DrumMode.FiveLane ? 6 : 5;
 
 
             // TODO: Make this work with multiple coda sections
