@@ -100,6 +100,6 @@ namespace YARG.Core.Engine
 
         public double GetTimeSinceLastHit(int fret, double time) => time - LastCollectedTime[fret];
 
-        public float GetLaneIntensity(int fret, double time) => (float) Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME);
+        public float GetLaneIntensity(int fret, double time) => (float) (Math.Min(time - LastHitTime[fret], BONUS_RECHARGE_TIME) / BONUS_RECHARGE_TIME);
     }
 }
