@@ -394,6 +394,11 @@ namespace YARG.Core.Engine
             }
 
             GetTotalLanes();
+
+            foreach (var coda in Codas)
+            {
+                coda.Reset();
+            }
         }
 
         protected abstract void CheckForNoteHit();

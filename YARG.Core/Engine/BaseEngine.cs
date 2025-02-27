@@ -463,6 +463,8 @@ namespace YARG.Core.Engine
             CurrentWaitCountdownIndex = 0;
 
             IsSoloActive = false;
+            IsCodaActive = false;
+            CodaHasStarted = false;
 
             TotalLanes = 0;
             CurrentLaneIndex = 1;
