@@ -500,6 +500,11 @@ namespace YARG.Core.Engine
                 solo.NotesHit = 0;
                 solo.SoloBonus = 0;
             }
+
+            foreach (var coda in Codas)
+            {
+                coda.Reset();
+            }
         }
 
         protected abstract void CheckForNoteHit();

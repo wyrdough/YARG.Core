@@ -456,6 +456,8 @@ namespace YARG.Core.Engine
             CurrentWaitCountdownIndex = 0;
 
             IsSoloActive = false;
+            IsCodaActive = false;
+            CodaHasStarted = false;
 
             IsWaitCountdownActive = false;
             IsStarPowerInputActive = false;
