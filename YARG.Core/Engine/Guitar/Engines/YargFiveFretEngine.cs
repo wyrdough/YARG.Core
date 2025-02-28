@@ -31,6 +31,11 @@ namespace YARG.Core.Engine.Guitar.Engines
             LastButtonMask = ButtonMask;
             ButtonMask = (byte) note.NoteMask;
 
+            if (IsCodaActive)
+            {
+                HandleCodaFretChange(time);
+            }
+
             YargLogger.LogFormatTrace("[Bot] Set button mask to: {0}", ButtonMask);
 
             HasTapped = ButtonMask != LastButtonMask;
@@ -110,49 +115,9 @@ namespace YARG.Core.Engine.Guitar.Engines
 
             bool strumEatenByHopo = false;
 
-            // There is no hit logic in a Coda/BRE. No overstrumming, no missing notes, no hitting notes
-            // TODO: Decide whether this is really the best place for this
             if (IsCodaActive)
             {
-                var coda = Codas[CurrentCodaIndex];
-
-                // TODO: Think of a better way to do this
-                // This creates a button mask for each fret, indexed by fret number
-                byte[] fretMask = new byte[5];
-                byte changed = (byte) 0;
-                byte pressed = (byte) 0;
-                for (int i = 0; i < fretMask.Length; i++)
-                {
-                    fretMask[i] = (byte) (1 << i);
-                }
-
-                // Bots still need to fret and attempt to strum any underlying notes
-                if (IsBot)
-                {
-                    UpdateBot(time);
-                }
-
-                // If there was a fret press this update, we have to tell the CodaSection about it
-                if (IsFretPress)
-                {
-                    // Figure out which button was pressed
-                    changed = (byte) (ButtonMask ^ LastButtonMask);
-                    pressed = (byte) (changed & ButtonMask);
-                }
-
-                // Press the frets on the coda
-                for (int i = 0; i < fretMask.Length; i++)
-                {
-                    if ((fretMask[i] & pressed) > 0)
-                    {
-                        coda.HitLane(time, i);
-                    }
-                }
-
-                HasStrummed = false;
-                HasFretted = false;
-                IsFretPress = false;
-                return;
+                HandleCodaFretChange(time);
             }
 
             // This is up here so overstrumming still works when there are no notes left
@@ -211,6 +176,18 @@ namespace YARG.Core.Engine.Guitar.Engines
             var hitWindow = EngineParameters.HitWindow.CalculateHitWindow(GetAverageNoteDistance(note));
             var frontEnd = EngineParameters.HitWindow.GetFrontEnd(hitWindow);
 
+            // If this is a BRE note, mark it as hit, advance to the next note, and return
+            if (note.IsBigRockEnding)
+            {
+                foreach (var child in note.ChildNotes)
+                {
+                    child.WasHit = true;
+                }
+                note.WasHit = true;
+                AdvanceToNextNote(note);
+                return;
+            }
+
             if (HasFretted)
             {
                 HasTapped = true;
@@ -238,6 +215,44 @@ namespace YARG.Core.Engine.Guitar.Engines
             HasStrummed = false;
             HasFretted = false;
             IsFretPress = false;
+        }
+
+        private void HandleCodaFretChange(double time)
+        {
+            // We shouldn't be called if a coda isn't active, but let's check just in case
+            if (!IsCodaActive)
+            {
+                return;
+            }
+
+            var coda = Codas[CurrentCodaIndex];
+
+            // TODO: Think of a better way to do this
+            // This creates a button mask for each fret, indexed by fret number
+            byte[] fretMask = new byte[5];
+            byte changed = (byte) 0;
+            byte pressed = (byte) 0;
+            for (int i = 0; i < fretMask.Length; i++)
+            {
+                fretMask[i] = (byte) (1 << i);
+            }
+
+            // If there was a fret press this update, we have to tell the CodaSection about it
+            if (IsFretPress)
+            {
+                // Figure out which button was pressed
+                changed = (byte) (ButtonMask ^ LastButtonMask);
+                pressed = (byte) (changed & ButtonMask);
+            }
+
+            // Press the frets on the coda
+            for (int i = 0; i < fretMask.Length; i++)
+            {
+                if ((fretMask[i] & pressed) > 0)
+                {
+                    coda.HitLane(time, i);
+                }
+            }
         }
 
         protected override void CheckForNoteHit()

@@ -16,6 +16,8 @@ namespace YARG.Core.Chart
         Solo      = 1 << 3,
         SoloStart = 1 << 4,
         SoloEnd   = 1 << 5,
+
+        BigRockEnding = 1 << 6,
     }
 
     public abstract class Note<TNote> : ChartEvent, ICloneable<TNote>
@@ -85,6 +87,8 @@ namespace YARG.Core.Chart
         public bool IsSolo => (Flags & NoteFlags.Solo) != 0;
         public bool IsSoloStart => (Flags & NoteFlags.SoloStart) != 0;
         public bool IsSoloEnd   => (Flags & NoteFlags.SoloEnd) != 0;
+
+        public bool IsBigRockEnding => (Flags & NoteFlags.BigRockEnding) != 0;
 
         /// <summary>
         /// Returns an enumerator that contains all child notes and the parent note itself (allocation free).

@@ -269,6 +269,13 @@ namespace YARG.Core.Chart
                     flags |= NoteFlags.SoloEnd;
             }
 
+            // Big Rock Ending
+            if (currentPhrases.TryGetValue(MoonPhrase.Type.BigRockEnding, out var bre) &&
+                IsEventInPhrase(moonNote, bre))
+            {
+                flags |= NoteFlags.BigRockEnding;
+            }
+
             return flags;
         }
 
