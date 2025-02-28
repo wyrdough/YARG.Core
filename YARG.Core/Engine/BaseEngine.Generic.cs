@@ -81,12 +81,25 @@ namespace YARG.Core.Engine
             {
                 foreach (var note in Notes)
                 {
+                    if (note.IsBigRockEnding)
+                    {
+                        continue;
+                    }
                     EngineStats.TotalNotes += GetNumberOfNotes(note);
                 }
             }
             else
             {
                 EngineStats.TotalNotes = Notes.Count;
+
+                // Remove BRE notes from TotalNotes
+                foreach (var note in Notes)
+                {
+                    if (note.IsBigRockEnding)
+                    {
+                        EngineStats.TotalNotes -= 1;
+                    }
+                }
             }
 
             EngineStats.TotalStarPowerPhrases = Chart.Phrases.Count((phrase) => phrase.Type == PhraseType.StarPower);
@@ -489,8 +502,7 @@ namespace YARG.Core.Engine
 
         protected virtual void MissNote(TNoteType note)
         {
-            // No need to check if we're still in a coda section here because we won't get called if we are
-            if (CodaHasStarted)
+            if (CodaHasStarted && !IsCodaActive)
             {
                 // -1 because the coda is over and the index has been incremented if we reach this point
                 Codas[CurrentCodaIndex - 1].MissNote();
@@ -1047,7 +1059,7 @@ namespace YARG.Core.Engine
             return sustain.BaseScore + deltaScore;
         }
 
-        private void AdvanceToNextNote(TNoteType note)
+        protected void AdvanceToNextNote(TNoteType note)
         {
             NoteIndex++;
             ReRunHitLogic = true;
@@ -1181,7 +1193,6 @@ namespace YARG.Core.Engine
                     continue;
                 }
 
-                // TODO: Actually figure out the correct values for lanes and maxScore depending on game mode
                 codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
             }
 
