@@ -1204,6 +1204,13 @@ namespace YARG.Core.Engine
             var allMeasureBeatLines = SyncTrack.Beatlines.Where(x => x.Type == BeatlineType.Measure).ToList();
 
             WaitCountdowns = new List<WaitCountdown>();
+            double codaTime = double.MaxValue;
+
+            if (Codas.Count > 0)
+            {
+                codaTime = Codas[0].StartTime;
+            }
+
             for (int i = 0; i < notes.Count; i++)
             {
                 // Compare the note at the current index against the previous note
@@ -1221,6 +1228,13 @@ namespace YARG.Core.Engine
 
                 Note<TNoteType> noteTwo = notes[i];
                 double noteTwoTime = noteTwo.Time;
+
+                // Wait countdowns should not be created once a coda section has started
+                if (noteOneTimeEnd > codaTime)
+                {
+                    // Should this be break?
+                    continue;
+                }
 
                 if (noteTwoTime - noteOneTimeEnd >= WaitCountdown.MIN_SECONDS)
                 {
@@ -1249,7 +1263,9 @@ namespace YARG.Core.Engine
                     }
 
                     var curMeasureline = allMeasureBeatLines[curMeasureIndex];
-                    while (curMeasureline.Tick <= noteTwoTick)
+                    // Stop adding beatlines to the list when we either reach the normal end of the countdown
+                    // or when a coda begins
+                    while (curMeasureline.Tick <= noteTwoTick && curMeasureline.Time <= codaTime)
                     {
                         // Skip counting on measures that are too close together
                         if (beatlinesThisCountdown.Count == 0 ||

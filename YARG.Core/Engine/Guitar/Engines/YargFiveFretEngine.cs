@@ -37,7 +37,7 @@ namespace YARG.Core.Engine.Guitar.Engines
                 HandleCodaFretChange(time);
             }
 
-            YargLogger.LogFormatTrace("[Bot] Set button mask to: {0}", ButtonMask);
+            YargLogger.LogFormatTrace("[Bot] Set button mask to: {0}", EffectiveButtonMask);
 
             HasTapped = EffectiveButtonMask != LastButtonMask;
             IsFretPress = true;
@@ -161,7 +161,11 @@ namespace YARG.Core.Engine.Guitar.Engines
                     // Strummed while strum leniency is active (double strum)
                     if (StrumLeniencyTimer.IsActive)
                     {
-                        Overstrum();
+                        // Not sure if this call actually needs to be protected
+                        if (!IsCodaActive)
+                        {
+                            Overstrum();
+                        }
                     }
                 }
 
@@ -249,25 +253,33 @@ namespace YARG.Core.Engine.Guitar.Engines
 
             var coda = Codas[CurrentCodaIndex];
 
-            // TODO: Think of a better way to do this
             // This creates a button mask for each fret, indexed by fret number
             byte[] fretMask = new byte[5];
             byte changed = (byte) 0;
             byte pressed = (byte) 0;
-            for (int i = 0; i < fretMask.Length; i++)
+
+            // If there was a strum, hit held frets
+            if (HasStrummed)
             {
-                fretMask[i] = (byte) (1 << i);
+                pressed = EffectiveButtonMask;
+            }
+            else
+            {
+                for (int i = 0; i < fretMask.Length; i++)
+                {
+                    fretMask[i] = (byte) (1 << i);
+                }
+
+                // If there was a fret press this update, we have to tell the CodaSection about it
+                if (IsFretPress)
+                {
+                    // Figure out which button was pressed
+                    changed = (byte) (EffectiveButtonMask ^ LastButtonMask);
+                    pressed = (byte) (changed & EffectiveButtonMask);
+                }
             }
 
-            // If there was a fret press this update, we have to tell the CodaSection about it
-            if (IsFretPress)
-            {
-                // Figure out which button was pressed
-                changed = (byte) (EffectiveButtonMask ^ LastButtonMask);
-                pressed = (byte) (changed & EffectiveButtonMask);
-            }
-
-            // Press the frets on the coda
+            // Hit the corresponding coda lanes
             for (int i = 0; i < fretMask.Length; i++)
             {
                 if ((fretMask[i] & pressed) > 0)
@@ -567,7 +579,11 @@ namespace YARG.Core.Engine.Guitar.Engines
                 if (StrumLeniencyTimer.IsExpired(CurrentTime))
                 {
                     //YargTrace.LogInfo("Strum Leniency: Expired. Overstrumming");
-                    Overstrum();
+                    if (!IsCodaActive)
+                    {
+                        Overstrum();
+                    }
+
                     StrumLeniencyTimer.Disable();
 
                     ReRunHitLogic = true;
