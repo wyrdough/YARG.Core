@@ -1189,6 +1189,13 @@ namespace YARG.Core.Engine
         protected void GetWaitCountdowns(List<TNoteType> notes)
         {
             WaitCountdowns = new List<WaitCountdown>();
+            double codaTime = double.MaxValue;
+
+            if (Codas.Count > 0)
+            {
+                codaTime = Codas[0].StartTime;
+            }
+
             for (int i = 0; i < notes.Count; i++)
             {
                 // Compare the note at the current index against the previous note
@@ -1207,7 +1214,27 @@ namespace YARG.Core.Engine
                 {
                     // Distance between these two notes is over the threshold
                     // Create a WaitCountdown instance to reference at runtime
-                    var newCountdown = new WaitCountdown(noteOneTimeEnd, noteTwo.Time - noteOneTimeEnd, noteOneTickEnd, noteTwo.Tick - noteOneTickEnd);
+
+                    // If this countdown would start after a coda, don't
+                    if (noteOneTimeEnd > codaTime)
+                    {
+                        continue;
+                    }
+
+                    WaitCountdown newCountdown;
+
+                    // If the countdown would last into a coda, cut it off at the coda
+                    if (noteTwo.Time > codaTime)
+                    {
+                        newCountdown = new WaitCountdown(noteOneTimeEnd, codaTime - noteOneTimeEnd, noteOneTickEnd,
+                            SyncTrack.TimeToTick(codaTime) - noteOneTickEnd);
+                    }
+                    else
+                    {
+
+                        newCountdown = new WaitCountdown(noteOneTimeEnd, noteTwo.Time - noteOneTimeEnd,
+                            noteOneTickEnd, noteTwo.Tick - noteOneTickEnd);
+                    }
 
                     WaitCountdowns.Add(newCountdown);
                     YargLogger.LogFormatTrace("Created a WaitCountdown at time {0} of {1} seconds in length", newCountdown.Time, newCountdown.TimeLength);
