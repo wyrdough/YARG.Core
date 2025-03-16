@@ -34,7 +34,7 @@ namespace YARG.Core.Song.Cache
         /// Format is YY_MM_DD_RR: Y = year, M = month, D = day, R = revision (reset across dates, only increment
         /// if multiple cache version changes happen in a single day).
         /// </summary>
-        private const int CACHE_VERSION = 25_03_08_02;
+        private const int CACHE_VERSION = 25_03_14_01;
 
         public static ScanProgressTracker Progress => _progress;
         private static ScanProgressTracker _progress;
@@ -1107,7 +1107,7 @@ namespace YARG.Core.Song.Cache
                 AddInvalidSong(stream.ReadString());
                 if (stream.ReadBoolean())
                 {
-                    stream.Position += sizeof(long);
+                    stream.Position += SIZEOF_DATETIME;
                 }
             }
         }
@@ -1209,7 +1209,7 @@ namespace YARG.Core.Song.Cache
                         else
                         {
                             AddInvalidSong(name);
-                            stream.Position += sizeof(long);
+                            stream.Position += SIZEOF_DATETIME;
                         }
                     }
 
@@ -1310,7 +1310,6 @@ namespace YARG.Core.Song.Cache
             for (int i = 0; i < count; i++)
             {
                 AddInvalidSong(stream.ReadString());
-                stream.Position += SIZEOF_DATETIME;
             }
         }
 
