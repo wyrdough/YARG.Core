@@ -147,11 +147,6 @@ namespace YARG.Core.Chart.AutoIntensity
 
         public static void SetRhActions(List<Chord> chords)
         {
-            List<int> strumIndices = new List<int>
-            {
-                0,
-                0
-            };
             for (int i = 0; i < chords.Count; i++)
             {
                 if (i < 1)
@@ -162,12 +157,6 @@ namespace YARG.Core.Chart.AutoIntensity
                 }
                 else
                 {
-                    List<Chord> prevChords = new List<Chord>()
-                    {
-                        chords[strumIndices.Last()],
-                        chords[strumIndices.ElementAt(strumIndices.Count - 2)]
-                    };
-                    List<double> prevTimes = prevChords.Select(chord => chord.Time).ToList();
                     chords[i].SetRhActions(chords[i - 1].Shape);
                     if (i == chords.Count - 1)
                     {
@@ -176,12 +165,6 @@ namespace YARG.Core.Chart.AutoIntensity
                     else
                     {
                         chords[i].SetOverstrumProb(chords[i + 1].Shape, chords[i + 1].Time);
-                    }
-
-                    if (chords[i].RhActions == 1)
-                    {
-                        strumIndices.Add(i);
-                        strumIndices.RemoveAt(0);
                     }
                 }
             }
@@ -324,7 +307,7 @@ namespace YARG.Core.Chart.AutoIntensity
 
             double left = MIN_CAPABILITY;
             double right = intensities.Max();
-            double lastFail = 0;
+
             while (right - left > 0.005)
             {
                 double capability = (left + right) / 2;

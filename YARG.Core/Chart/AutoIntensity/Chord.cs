@@ -115,7 +115,7 @@ namespace YARG.Core.Chart.AutoIntensity
             LhActions.Clear();
             for(int i = 0; i < Lifts.Count; i++)
             {
-                 LhActions.Add(HarmonicSum(CountFrets(Lifts[i]) + CountFrets(Presses[i]))); //Assuming you will translate harmonic_sum to HarmonicSum in C#
+                 LhActions.Add(HarmonicSum(CountFrets(Lifts[i]) + CountFrets(Presses[i])));
             }
         }
 
@@ -170,8 +170,7 @@ namespace YARG.Core.Chart.AutoIntensity
             rhIntensity *= RhActions.Value;
 
             lhIntensity = Math.Max(lhIntensity, EPSILON);
-            // It took a while to find that this is using lhIntensity in the python..is that correct?
-            rhIntensity = Math.Max(lhIntensity, EPSILON);
+            rhIntensity = Math.Max(rhIntensity, EPSILON);
 
             // Expected contribution of the chord n previous is 1/n, readjust sum accordingly
             double noteLookbackFactor = 1 / HarmonicSum(LhVel.Count);

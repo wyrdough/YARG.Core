@@ -102,20 +102,11 @@ namespace YARG.Core.Chart.AutoIntensity
                         forcing = (note.IsHopo ? 1 : 0) + (note.IsTap ? 2 : 0);
                     }
 
-                    // TODO: Remove this testing shit
-                    // if (forcing == null || forcing == 0)
-                    // {
-                    //     forcing = 1;
-                    // }
-
                     var noteMask = note.NoteMask;
                     // TODO: make sure we're operating on a five fret chart before doing this
-                    // The numbers do come out slightly differently if we don't remap YARG's conception
-                    // of the note mask to the intensity algorithm's conception.
-                    //
-                    // Thus, the open note needs to be in bit 1 instead of 64 if it is set and everything else needs
-                    // to be shifted left regardless
-
+                    // TODO: Fix the AutoIntensity code to look for the open mask in bit 64
+                    // The open note needs to be in bit 1 instead of 64 if it is set and everything else needs
+                    // to be shifted left to match AutoIntensity's masks
                     if ((noteMask & OPEN_MASK) != 0)
                     {
                         noteMask = ((noteMask & ~OPEN_MASK) << 1) | 1;

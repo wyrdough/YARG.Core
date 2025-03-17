@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace YARG.Core.Chart.AutoIntensity
 {
@@ -56,25 +55,6 @@ namespace YARG.Core.Chart.AutoIntensity
             { Diff.EXPERT, 42 } // 50
         };
 
-        // MIDI to lanes
-        public static readonly List<int> MID_TO_LANES = new List<int> { 126, 127 };
-
-        enum ChartDifficulties
-        {
-            GuitarEasy   = Diff.EASY,
-            GuitarMedium = Diff.MEDIUM,
-            GuitarHard   = Diff.HARD,
-            GuitarExpert = Diff.EXPERT,
-            BassEasy     = Diff.EASY,
-            BassMedium   = Diff.MEDIUM,
-            BassHard     = Diff.HARD,
-            BassExpert   = Diff.EXPERT,
-            RhythmEasy   = Diff.EASY,
-            RhythmMedium = Diff.MEDIUM,
-            RhythmHard   = Diff.HARD,
-            RhythmExpert = Diff.EXPERT
-        }
-
         // Verified to work
         public static double HarmonicSum(int n)
         {
@@ -88,7 +68,7 @@ namespace YARG.Core.Chart.AutoIntensity
 
         public static int CountFrets(int shape) => PopCount((uint) shape);
 
-        // Ripped from newer .net software fallback
+        // Ripped from newer .net software fallback (MIT licensed)
         public static int PopCount(uint value)
         {
             const uint c1 = 0x_55555555u;
@@ -115,40 +95,6 @@ namespace YARG.Core.Chart.AutoIntensity
             STRUM,
             HOPO,
             TAP
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public class TypeValueAttribute : Attribute
-    {
-        public Type Value { get; }
-
-        public TypeValueAttribute(Type value)
-        {
-            Value = value;
-        }
-    }
-
-    public enum NoteTypes
-    {
-        [TypeValue(typeof(GuitarNote))]
-        GuitarNoteValue,
-        [TypeValue(typeof(DrumNote))]
-        DrumNoteValue,
-        [TypeValue(typeof(ProKeysNote))]
-        ProKeysNoteValue,
-        [TypeValue(typeof(ProGuitarNote))]
-        ProGuitarNoteValue,
-    }
-
-    public static class NoteTypeEnumExtensions
-    {
-        public static Type GetTypeValue(this NoteTypes enumValue)
-        {
-            var typeInfo = enumValue.GetType().GetField(enumValue.ToString());
-            var attribute = typeInfo.GetCustomAttributes(typeof(TypeValueAttribute), false).FirstOrDefault() as TypeValueAttribute;
-
-            return attribute.Value;
         }
     }
 }
