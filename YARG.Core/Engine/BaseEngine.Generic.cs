@@ -883,23 +883,23 @@ namespace YARG.Core.Engine
             for (int i = 0; i < Notes.Count; i++)
             {
                 var curr = Notes[i];
-                if (curr.IsSoloStart)
+                if (!curr.IsSoloStart)
                 {
-                    int soloNoteCount = 0;
-                    var start = curr;
-                    while (true)
-                    {
-                        soloNoteCount += GetNumberOfNotes(curr);
-                        if (curr.IsSoloEnd || i + 1 == Notes.Count)
-                        {
-                            break;
-                        }
-                        curr = Notes[++i];
-                    }
-                    soloSections.Add(new SoloSection(start.Tick, curr.Tick, start.Time, curr.TimeEnd, soloNoteCount));
+                    continue;
                 }
-            }
 
+                int soloNoteCount = 0;
+                while (true)
+                {
+                    soloNoteCount += GetNumberOfNotes(curr);
+                    if (curr.IsSoloEnd)
+                    {
+                        break;
+                    }
+                    curr = Notes[++i];
+                }
+                soloSections.Add(new SoloSection(soloNoteCount));
+            }
             return soloSections;
         }
 
