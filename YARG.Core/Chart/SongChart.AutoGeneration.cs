@@ -463,5 +463,153 @@ namespace YARG.Core.Chart
 
             return containsCrash && (containsKick || containsSnare);
         }
+
+        // Add range shift events to the InstrumentDifficulty
+        private void CreateRangeShiftPhrases()
+        {
+            var allPossibleDifficulties = Enum.GetValues(typeof(Difficulty));
+            int size;
+
+            // Only guitar/bass have range shifts
+            foreach (var track in FiveFretTracks)
+            {
+
+                foreach (Difficulty difficulty in allPossibleDifficulties)
+                {
+                    if (!track.TryGetDifficulty(difficulty, out var instrumentDifficulty))
+                    {
+                        continue;
+                    }
+
+                    var textEvents = ParseRangeShifts(instrumentDifficulty);
+
+                    for (var i = 0; i < textEvents.Count; i++)
+                    {
+                        var time = textEvents[i].Time;
+                        var tick = textEvents[i].Tick;
+                        double timeEnd;
+                        uint tickEnd;
+
+                        // Overlaps will lead to bad things, so the end of one phrase is a tick before the beginning of the next
+                        if (i < textEvents.Count - 1)
+                        {
+                            tickEnd = textEvents[i + 1].Tick - 1;
+                            timeEnd = SyncTrack.TickToTime(tickEnd);
+                        }
+                        else
+                        {
+                            // This is the last range shift, so it ends once all the notes are over
+                            tickEnd = instrumentDifficulty.Notes[^1].TickEnd;
+                            timeEnd = instrumentDifficulty.Notes[^1].TimeEnd;
+                        }
+
+                        // We already validated the event above, so no need to do it again, just split and go
+                        var splitEvent = textEvents[i].Text.Split(' ');
+
+                        var range = int.Parse(splitEvent[2]);
+
+                        // If the third param doesn't exist or can't be parsed, use a default
+                        // The event has already been validated as being not entirely malformed by the time we reach
+                        // this point, so we can rely on splitEvent.Length being exactly 3 or 4 here.
+                        if (splitEvent.Length == 3 || !int.TryParse(splitEvent[3], out size))
+                        {
+                            size = instrumentDifficulty.Difficulty switch
+                            {
+                                Difficulty.Easy   => 3,
+                                Difficulty.Medium => 4,
+                                _                 => 5,
+                            };
+                        }
+
+                        var newPhrase = new RangeShift(time, timeEnd - time, tick, tickEnd - tick, range, size);
+                        int newPhraseIndex = instrumentDifficulty.RangeShiftEvents.UpperBound(newPhrase.Tick);
+
+                        // Add or insert the new event into the list for the given instrument difficulty
+                        if (newPhraseIndex == -1)
+                        {
+                            instrumentDifficulty.RangeShiftEvents.Add(newPhrase);
+                        }
+                        else
+                        {
+                            instrumentDifficulty.RangeShiftEvents.Insert(newPhraseIndex, newPhrase);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static List<TextEvent> ParseRangeShifts(InstrumentDifficulty<GuitarNote> instrumentDifficulty)
+        {
+            List<TextEvent> textEvents = new List<TextEvent>();
+            int size;
+
+            foreach (var textEvent in instrumentDifficulty.TextEvents)
+            {
+                if (!textEvent.Text.StartsWith("ld_range_shift"))
+                {
+                    continue;
+                }
+
+                // Validate the event and add it to the list
+                // My natural inclination here would be to use a regex, but they're not really used
+                // anywhere else in YARG, so...
+                var splitEvent = textEvent.Text.Split(' ');
+
+                // 3 uses default size, 4 explicitly defines range size
+                if (splitEvent.Length != 3 && splitEvent.Length != 4)
+                {
+                    YargLogger.LogDebug("Invalid range shift event. (Improper parameter count)");
+                    continue;
+                }
+
+                if (!(int.TryParse(splitEvent[1], out int eventDifficulty) &&
+                    int.TryParse(splitEvent[2], out int range)))
+                {
+                    YargLogger.LogDebug("Invalid range shift event. (Unable to parse difficulty and range)");
+                    continue;
+                }
+
+                // Add one to eventDifficulty to make it match the Difficulty enum
+                eventDifficulty++;
+
+                if (splitEvent.Length == 4 && !int.TryParse(splitEvent[3], out size))
+                {
+                    YargLogger.LogDebug("Invalid range shift event. (Unable to parse size)");
+                    continue;
+                }
+                else
+                {
+                    size = eventDifficulty switch
+                    {
+                        (int) Difficulty.Easy    => 3,
+                        (int) Difficulty.Medium  => 4,
+                        _                        => 5,
+                    };
+                }
+
+                // Further validation
+                // 1) Is the range index valid
+                if (range < 1 || range > 5)
+                {
+                    continue;
+                }
+
+                // 2) Is the size valid for the range index
+                if (range + size > 6)
+                {
+                    continue;
+                }
+
+                // 3) Does it apply to this difficulty?
+                if ((int) instrumentDifficulty.Difficulty != eventDifficulty)
+                {
+                    continue;
+                }
+
+                // We have a valid range shift, so place it in the appropriate difficulty bin
+                textEvents.Add(textEvent);
+            }
+            return textEvents;
+        }
     }
 }
