@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using YARG.Core.Chart;
 using YARG.Core.Input;
 using YARG.Core.Logging;
@@ -29,6 +30,12 @@ namespace YARG.Core.Engine.Guitar.Engines
 
             LastButtonMask = EffectiveButtonMask;
             EffectiveButtonMask = (byte) note.NoteMask;
+
+            YargLogger.LogFormatTrace("[Bot] Set button mask to: {0}", EffectiveButtonMask);
+            if (IsCodaActive)
+            {
+                HandleCodaFretChange(time);
+            }
 
             YargLogger.LogFormatTrace("[Bot] Set button mask to: {0}", EffectiveButtonMask);
 
@@ -130,6 +137,11 @@ namespace YARG.Core.Engine.Guitar.Engines
 
             bool strumEatenByHopo = false;
 
+            if (IsCodaActive)
+            {
+                HandleCodaFretChange(time);
+            }
+
             // This is up here so overstrumming still works when there are no notes left
             if (HasStrummed)
             {
@@ -149,7 +161,11 @@ namespace YARG.Core.Engine.Guitar.Engines
                     // Strummed while strum leniency is active (double strum)
                     if (StrumLeniencyTimer.IsActive)
                     {
-                        Overstrum();
+                        // Not sure if this call actually needs to be protected
+                        if (!IsCodaActive)
+                        {
+                            Overstrum();
+                        }
                     }
                 }
 
@@ -186,6 +202,18 @@ namespace YARG.Core.Engine.Guitar.Engines
             var hitWindow = EngineParameters.HitWindow.CalculateHitWindow(GetAverageNoteDistance(note));
             var frontEnd = EngineParameters.HitWindow.GetFrontEnd(hitWindow);
 
+            // If this is a BRE note, mark it as hit, advance to the next note, and return
+            if (note.IsBigRockEnding)
+            {
+                foreach (var child in note.ChildNotes)
+                {
+                    child.WasHit = true;
+                }
+                note.WasHit = true;
+                AdvanceToNextNote(note);
+                return;
+            }
+
             if (HasFretted)
             {
                 HasTapped = true;
@@ -215,6 +243,52 @@ namespace YARG.Core.Engine.Guitar.Engines
             IsFretPress = false;
         }
 
+        private void HandleCodaFretChange(double time)
+        {
+            // We shouldn't be called if a coda isn't active, but let's check just in case
+            if (!IsCodaActive)
+            {
+                return;
+            }
+
+            var coda = Codas[CurrentCodaIndex];
+
+            // This creates a button mask for each fret, indexed by fret number
+            byte[] fretMask = new byte[5];
+            byte changed = (byte) 0;
+            byte pressed = (byte) 0;
+
+            // If there was a strum, hit held frets
+            if (HasStrummed)
+            {
+                pressed = EffectiveButtonMask;
+            }
+            else
+            {
+                for (int i = 0; i < fretMask.Length; i++)
+                {
+                    fretMask[i] = (byte) (1 << i);
+                }
+
+                // If there was a fret press this update, we have to tell the CodaSection about it
+                if (IsFretPress)
+                {
+                    // Figure out which button was pressed
+                    changed = (byte) (EffectiveButtonMask ^ LastButtonMask);
+                    pressed = (byte) (changed & EffectiveButtonMask);
+                }
+            }
+
+            // Hit the corresponding coda lanes
+            for (int i = 0; i < fretMask.Length; i++)
+            {
+                if ((fretMask[i] & pressed) > 0)
+                {
+                    coda.HitLane(time, i);
+                }
+            }
+        }
+
         protected override void CheckForNoteHit()
         {
             for (int i = NoteIndex; i < Notes.Count; i++)
@@ -236,7 +310,7 @@ namespace YARG.Core.Engine.Guitar.Engines
                         {
                             break;
                         }
-                        
+
                         MissNote(note);
                         YargLogger.LogFormatTrace("Missed note (Index: {0}, Mask: {1}) at {2}", i,
                             note.NoteMask, CurrentTime);
@@ -505,7 +579,11 @@ namespace YARG.Core.Engine.Guitar.Engines
                 if (StrumLeniencyTimer.IsExpired(CurrentTime))
                 {
                     //YargTrace.LogInfo("Strum Leniency: Expired. Overstrumming");
-                    Overstrum();
+                    if (!IsCodaActive)
+                    {
+                        Overstrum();
+                    }
+
                     StrumLeniencyTimer.Disable();
 
                     ReRunHitLogic = true;
@@ -537,6 +615,36 @@ namespace YARG.Core.Engine.Guitar.Engines
             }
 
             return false;
+        }
+
+        private static int GetMostSignificantBit(int mask)
+        {
+            // Gets the most significant bit of the mask
+            var msbIndex = 0;
+            while (mask != 0)
+            {
+                mask >>= 1;
+                msbIndex++;
+            }
+
+            return msbIndex;
+        }
+
+        protected override List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
+            }
+
+            return codaSections;
         }
     }
 }

@@ -21,10 +21,10 @@ namespace YARG.Core.Chart
         {
             var difficulties = new Dictionary<Difficulty, InstrumentDifficulty<GuitarNote>>()
             {
-                { Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote) },
-                { Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote) },
-                { Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote) },
-                { Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote) },
+                { Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, null, ValidateGuitarPhrase) },
+                { Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, null, ValidateGuitarPhrase) },
+                { Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, null, ValidateGuitarPhrase) },
+                { Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote, null, ValidateGuitarPhrase) },
             };
             return new(instrument, difficulties);
         }
@@ -165,6 +165,17 @@ namespace YARG.Core.Chart
             }
 
             return flags;
+        }
+
+        private Phrase? ValidateGuitarPhrase(Phrase phrase)
+        {
+            if (phrase.Type == PhraseType.BigRockEnding && phrase.Time < _codaTime)
+            {
+                // BRE Phrases aren't allowed before the coda event
+                return null;
+            }
+
+            return phrase;
         }
     }
 }

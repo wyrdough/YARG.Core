@@ -27,9 +27,9 @@ namespace YARG.Core.Engine
         /// Total score across all score values.
         /// </summary>
         /// <remarks>
-        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, and <see cref="SoloBonuses"/>.
+        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, <see cref="SoloBonuses"/>, and <see cref="CodaBonuses"/>.
         /// </remarks>
-        public int TotalScore => CommittedScore + PendingScore + SoloBonuses;
+        public int TotalScore => CommittedScore + PendingScore + SoloBonuses + CodaBonuses;
 
         /// <summary>
         /// Total score earned from hitting notes.
@@ -142,6 +142,14 @@ namespace YARG.Core.Engine
         /// </summary>
         public int SoloBonuses;
 
+        /// <summary>
+        /// Amount of points earned from coda (Big Rock Ending) bonuses.
+        /// </summary>
+        public int CodaBonuses;
+
+        /// <summary>
+        /// Amount of points earned from Star Power.
+        /// </summary>
         public int StarPowerScore;
 
         /// <summary>

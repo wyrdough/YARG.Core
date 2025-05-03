@@ -81,12 +81,25 @@ namespace YARG.Core.Engine
             {
                 foreach (var note in Notes)
                 {
+                    if (note.IsBigRockEnding)
+                    {
+                        continue;
+                    }
                     EngineStats.TotalNotes += GetNumberOfNotes(note);
                 }
             }
             else
             {
                 EngineStats.TotalNotes = Notes.Count;
+
+                // Remove BRE notes from TotalNotes
+                foreach (var note in Notes)
+                {
+                    if (note.IsBigRockEnding)
+                    {
+                        EngineStats.TotalNotes -= 1;
+                    }
+                }
             }
 
             EngineStats.TotalStarPowerPhrases = Chart.Phrases.Count((phrase) => phrase.Type == PhraseType.StarPower);
@@ -106,6 +119,7 @@ namespace YARG.Core.Engine
             }
 
             Solos = GetSoloSections();
+            Codas = GetCodaSections();
         }
 
         protected override void GenerateQueuedUpdates(double nextTime)
@@ -275,6 +289,23 @@ namespace YARG.Core.Engine
                 CurrentSyncIndex++;
             }
 
+            // TODO: I'm not sure if this is the best place for this?
+            // Check to see if a coda has started or ended
+            if (CurrentCodaIndex < Codas.Count)
+            {
+                if (time >= Codas[CurrentCodaIndex].StartTime && !IsCodaActive)
+                {
+                    YargLogger.LogFormatDebug("Starting Coda at time {0}", time);
+                    StartCoda();
+                }
+
+                if (time >= Codas[CurrentCodaIndex].EndTime && IsCodaActive)
+                {
+                    YargLogger.LogFormatDebug("Ending Coda at time {0}", time);
+                    EndCoda();
+                }
+            }
+
             // Only check for WaitCountdowns in this chart if there are any remaining
             if (CurrentWaitCountdownIndex < WaitCountdowns.Count)
             {
@@ -376,6 +407,11 @@ namespace YARG.Core.Engine
             }
 
             GetTotalLanes();
+
+            foreach (var coda in Codas)
+            {
+                coda.Reset();
+            }
         }
 
         protected abstract void CheckForNoteHit();
@@ -391,6 +427,13 @@ namespace YARG.Core.Engine
 
         protected virtual void HitNote(TNoteType note)
         {
+            // If this is the last note of the chart and there was a successful coda, award coda bonus
+            if (CodaHasStarted && NoteIndex == Notes.Count - 1 && Codas[CurrentCodaIndex - 1].Success)
+            {
+                EngineStats.CodaBonuses += Codas[CurrentCodaIndex - 1].TotalCodaBonus;
+                OnCodaEnd?.Invoke(Codas[CurrentCodaIndex - 1]);
+            }
+
             if (note.ParentOrSelf.WasFullyHitOrMissed())
             {
                 AdvanceToNextNote(note);
@@ -459,6 +502,12 @@ namespace YARG.Core.Engine
 
         protected virtual void MissNote(TNoteType note)
         {
+            if (CodaHasStarted && !IsCodaActive)
+            {
+                // -1 because the coda is over and the index has been incremented if we reach this point
+                Codas[CurrentCodaIndex - 1].MissNote();
+            }
+
             if (note.ParentOrSelf.WasFullyHitOrMissed())
             {
                 AdvanceToNextNote(note);
@@ -871,6 +920,27 @@ namespace YARG.Core.Engine
             CurrentSoloIndex++;
         }
 
+        protected void StartCoda()
+        {
+            if (CurrentCodaIndex >= Codas.Count)
+            {
+                return;
+            }
+
+            IsCodaActive = true;
+            CodaHasStarted = true;
+            OnCodaStart?.Invoke(Codas[CurrentCodaIndex]);
+        }
+
+        protected void EndCoda()
+        {
+            YargLogger.LogFormatDebug("Coda ended at time {0} with bonus score {1}", CurrentTime, Codas[CurrentCodaIndex].TotalCodaBonus);
+
+            IsCodaActive = false;
+            // OnCodaEnd?.Invoke(Codas[CurrentCodaIndex]);
+            CurrentCodaIndex++;
+        }
+
         protected override void UpdateProgressValues(uint tick)
         {
             base.UpdateProgressValues(tick);
@@ -989,7 +1059,7 @@ namespace YARG.Core.Engine
             return sustain.BaseScore + deltaScore;
         }
 
-        private void AdvanceToNextNote(TNoteType note)
+        protected void AdvanceToNextNote(TNoteType note)
         {
             NoteIndex++;
             ReRunHitLogic = true;
@@ -1109,11 +1179,38 @@ namespace YARG.Core.Engine
             }
         }
 
+        // For the moment, there is really only one of these, but there is
+        // a possibility that we may want multiple coda sections in the future
+        // TODO: Make this abstract and put a GetCodaSections implementation in all engines
+        protected virtual List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                codaSections.Add(new CodaSection(5, phrase.Time, phrase.TimeEnd));
+            }
+
+            return codaSections;
+        }
+
         protected void GetWaitCountdowns(List<TNoteType> notes)
         {
             var allMeasureBeatLines = SyncTrack.Beatlines.Where(x => x.Type == BeatlineType.Measure).ToList();
 
             WaitCountdowns = new List<WaitCountdown>();
+            double codaTime = double.MaxValue;
+
+            if (Codas.Count > 0)
+            {
+                codaTime = Codas[0].StartTime;
+            }
+
             for (int i = 0; i < notes.Count; i++)
             {
                 // Compare the note at the current index against the previous note
@@ -1131,6 +1228,13 @@ namespace YARG.Core.Engine
 
                 Note<TNoteType> noteTwo = notes[i];
                 double noteTwoTime = noteTwo.Time;
+
+                // Wait countdowns should not be created once a coda section has started
+                if (noteOneTimeEnd > codaTime)
+                {
+                    // Should this be break?
+                    continue;
+                }
 
                 if (noteTwoTime - noteOneTimeEnd >= WaitCountdown.MIN_SECONDS)
                 {
@@ -1159,7 +1263,9 @@ namespace YARG.Core.Engine
                     }
 
                     var curMeasureline = allMeasureBeatLines[curMeasureIndex];
-                    while (curMeasureline.Tick <= noteTwoTick)
+                    // Stop adding beatlines to the list when we either reach the normal end of the countdown
+                    // or when a coda begins
+                    while (curMeasureline.Tick <= noteTwoTick && curMeasureline.Time <= codaTime)
                     {
                         // Skip counting on measures that are too close together
                         if (beatlinesThisCountdown.Count == 0 ||

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using YARG.Core.Chart;
 using YARG.Core.Input;
 using YARG.Core.Logging;
@@ -166,6 +167,27 @@ namespace YARG.Core.Engine.Drums.Engines
             Action = null;
             PadHit = null;
             HitVelocity = null;
+        }
+
+        protected override List<CodaSection> GetCodaSections()
+        {
+            var codaSections = new List<CodaSection>();
+            var lanes = EngineParameters.Mode == DrumsEngineParameters.DrumMode.FiveLane ? 6 : 5;
+
+
+            // TODO: Make this work with multiple coda sections
+
+            foreach (var phrase in Chart.Phrases)
+            {
+                if (phrase.Type != PhraseType.BigRockEnding)
+                {
+                    continue;
+                }
+
+                codaSections.Add(new CodaSection(lanes, phrase.Time, phrase.TimeEnd, false));
+            }
+
+            return codaSections;
         }
     }
 }

@@ -69,6 +69,12 @@ namespace YARG.Core.Engine.Drums
                 return;
             }
 
+            // Can't overhit during a coda section
+            if (IsCodaActive)
+            {
+                return;
+            }
+
             if (NoteIndex < Notes.Count)
             {
                 // Don't remove the phrase if the current note being overstrummed is the start of a phrase
@@ -93,6 +99,12 @@ namespace YARG.Core.Engine.Drums
 
         protected void HitNote(DrumNote note, bool activationAutoHit)
         {
+            // Can't hit a note during a coda section
+            if (IsCodaActive)
+            {
+                return;
+            }
+
             if (note.WasHit || note.WasMissed)
             {
                 YargLogger.LogFormatTrace("Tried to hit/miss note twice (Pad: {0}, Index: {1}, Hit: {2}, Missed: {3})",
@@ -230,6 +242,12 @@ namespace YARG.Core.Engine.Drums
 
         protected override void MissNote(DrumNote note)
         {
+            // Can't miss a note during a coda section
+            if (IsCodaActive)
+            {
+                return;
+            }
+
             if (note.WasHit || note.WasMissed)
             {
                 YargLogger.LogFormatTrace("Tried to hit/miss note twice (Pad: {0}, Index: {1}, Hit: {2}, Missed: {3})",
