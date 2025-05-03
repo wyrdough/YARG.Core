@@ -37,6 +37,7 @@ namespace YARG.Core.Engine.ProKeys.Engines
                 if (gameInput.Button)
                 {
                     KeyHit = (int) action;
+                    SubmitLaneNote((int) action);
                     _keyPressedTimes[(int) action].NoteIndex = NoteIndex;
                     _keyPressedTimes[(int) action].Time = gameInput.Time;
                 }
@@ -120,11 +121,15 @@ namespace YARG.Core.Engine.ProKeys.Engines
             {
                 if (missed)
                 {
-                    // If one of the notes in the chord was missed out the back end,
-                    // that means all of them would miss.
-                    foreach (var missedNote in parentNote.AllNotes)
+                    // Intercept missed note while lane phrase is active
+                    if (!HitNoteFromLane(parentNote))
                     {
-                        MissNote(missedNote);
+                        // If one of the notes in the chord was missed out the back end,
+                        // that means all of them would miss.
+                        foreach (var missedNote in parentNote.AllNotes)
+                        {
+                            MissNote(missedNote);
+                        }
                     }
                 }
             }
