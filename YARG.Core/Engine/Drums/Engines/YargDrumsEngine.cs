@@ -35,8 +35,8 @@ namespace YARG.Core.Engine.Drums.Engines
             // Update bot (will return if not enabled)
             UpdateBot(time);
 
-            // Only check hit if there are notes left
-            if (NoteIndex < Notes.Count)
+            // Only check hit if there are notes left and we aren't in a coda section
+            if (NoteIndex < Notes.Count && !IsCodaActive)
             {
                 CheckForNoteHit();
             }
@@ -76,17 +76,25 @@ namespace YARG.Core.Engine.Drums.Engines
                                 {
                                     continue;
                                 }
-                                
+
                                 // Allow drummers to skip SP activation notes without being penalized.
                                 if (missedNote.IsStarPowerActivator && CanStarPowerActivate)
                                 {
                                     HitNote(missedNote, true);
                                     continue;
                                 }
+
+                                // Auto hit notes during coda sections if they weren't already hit
+                                if (IsCodaActive)
+                                {
+                                    HitNote(missedNote);
+                                    continue;
+                                }
+
                                 MissNote(missedNote);
                             }
                         }
-                        
+
                         break;
                     }
 
