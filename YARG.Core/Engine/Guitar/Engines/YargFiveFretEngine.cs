@@ -531,7 +531,7 @@ namespace YARG.Core.Engine.Guitar.Engines
             if (note.IsHopo || note.IsTap || SoloTapAllowed)
             {
                 HasTapped = false;
-                StartTimer(ref HopoLeniencyTimer, CurrentTime);
+                StartTimer(ref HopoLeniencyTimer, CurrentTime, 0, TimeLeftInWindow(note, CurrentTime));
             }
             else
             {

@@ -770,13 +770,17 @@ namespace YARG.Core.Engine
             StarPowerWhammyTimer.SetSpeed(speed);
         }
 
-        protected static void StartTimer(ref EngineTimer timer, double startTime, double offset = 0)
+        // This won't handle both offset and minimum
+        protected static void StartTimer(ref EngineTimer timer, double startTime, double offset = 0, double minimum = 0)
         {
             if (offset > 0)
             {
                 timer.StartWithOffset(startTime, offset);
             }
-            else
+            else if (minimum > 0)
+            {
+                timer.StartWithMinimum(startTime, minimum);
+            }
             {
                 timer.Start(startTime);
             }

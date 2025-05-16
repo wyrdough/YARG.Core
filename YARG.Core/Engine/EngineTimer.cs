@@ -10,13 +10,14 @@ namespace YARG.Core.Engine
 
         private double _startTime;
         private double _speed;
+        private double _extraTime;
 
         public readonly double TimeThreshold;
 
         public double SpeedAdjustedThreshold => TimeThreshold * _speed;
 
         public readonly double StartTime => _startTime;
-        public readonly double EndTime => _startTime + TimeThreshold * _speed;
+        public readonly double EndTime => _startTime + _extraTime + TimeThreshold * _speed;
 
         public bool IsActive { get; private set; }
 
@@ -29,6 +30,7 @@ namespace YARG.Core.Engine
         {
             _startTime = NOT_STARTED;
             _speed = 1.0;
+            _extraTime = 0;
 
             TimeThreshold = threshold;
 
@@ -44,6 +46,12 @@ namespace YARG.Core.Engine
         public void StartWithOffset(double currentTime, double offset)
         {
             StartWithOffset(ref _startTime, currentTime, TimeThreshold * _speed, offset);
+            IsActive = true;
+        }
+
+        public void StartWithMinimum(double currentTime, double minimum)
+        {
+            StartWithMinimum(ref _startTime, ref _extraTime, currentTime, TimeThreshold * _speed, minimum);
             IsActive = true;
         }
 
@@ -71,6 +79,20 @@ namespace YARG.Core.Engine
         {
             double diff = Math.Abs(threshold - offset);
             startTime = currentTime - diff;
+        }
+
+        /// <summary>
+        /// Starts a timer with a minimum duration that may be longer than the active engine preset would normally allow
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="extraTime"></param>
+        /// <param name="currentTime"></param>
+        /// <param name="threshold"></param>
+        /// <param name="minimumDuration"></param>
+        public static void StartWithMinimum(ref double startTime, ref double extraTime, double currentTime, double threshold, double minimumDuration)
+        {
+            startTime = currentTime;
+            extraTime = Math.Max((startTime + minimumDuration) - threshold, 0);
         }
 
         public static void Reset(ref double startTime)
