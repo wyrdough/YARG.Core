@@ -100,10 +100,10 @@ namespace YARG.Core.Engine.Drums
         protected void HitNote(DrumNote note, bool activationAutoHit)
         {
             // Can't hit a note during a coda section
-            if (IsCodaActive)
-            {
-                return;
-            }
+            // if (IsCodaActive)
+            // {
+            //     return;
+            // }
 
             if (note.WasHit || note.WasMissed)
             {
@@ -153,9 +153,9 @@ namespace YARG.Core.Engine.Drums
 
             AddScore(note);
 
-            // If it's an auto hit, act as if it *wasn't* hit visually.
+            // If it's an auto hit or we're in a coda section, act as if it *wasn't* hit visually.
             // Score and such is accounted for above.
-            if (!activationAutoHit)
+            if (!activationAutoHit || IsCodaActive)
             {
                 OnNoteHit?.Invoke(NoteIndex, note);
             }

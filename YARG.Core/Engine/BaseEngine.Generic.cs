@@ -1047,6 +1047,14 @@ namespace YARG.Core.Engine
             return true;
         }
 
+        protected double TimeLeftInWindow(TNoteType note, double time)
+        {
+            double hitWindow = EngineParameters.HitWindow.CalculateHitWindow(GetAverageNoteDistance(note));
+            double backend = EngineParameters.HitWindow.GetBackEnd(hitWindow);
+
+            return note.Time - time + backend;
+        }
+
         protected double CalculateSustainPoints(ref ActiveSustain<TNoteType> sustain, uint tick)
         {
             uint scoreTick = Math.Clamp(tick, sustain.Note.Tick, sustain.Note.TickEnd);
