@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using YARG.Core.Engine.Guitar;
+using YARG.Core.Extensions;
 
 namespace YARG.Core.Chart
 {
@@ -49,156 +52,150 @@ namespace YARG.Core.Chart
 
             var shifts = difficulty.RangeShiftEvents;
 
-            // We're shifting all ranges into the first range, so set rangeTo to the first range
-            int rangeTo = shifts[0].Range;
-            // These need to be initialized here since the first range won't have set them in the loop
-            int rangeFrom = shifts[0].Range;
-            int shiftIndex = 0;
-            int shiftAmount = rangeFrom - rangeTo;
-            GuitarNote note;
+            int firstRange = shifts[0].Range;
 
-            for (var i = 0; i < difficulty.Notes.Count; i++)
+            // `+ 1` because all the lane indices in the enum are offset by one... for some reason
+            Span<uint> laneEndTicks = new uint[EnumExtensions<FiveFretGuitarFret>.Count + 1];
+
+            for (int noteIndex = 0, shiftIndex = 0; noteIndex < difficulty.Notes.Count;)
             {
-                note = difficulty.Notes[i];
+                var note = difficulty.Notes[noteIndex];
 
-                if (note.Time >= shifts[shiftIndex].TimeEnd && shiftIndex + 1 < shifts.Count)
+                while (shiftIndex + 1 < shifts.Count && note.Time >= shifts[shiftIndex + 1].Time)
                 {
                     shiftIndex++;
-                    rangeFrom = shifts[shiftIndex].Range;
-                    shiftAmount = rangeFrom - rangeTo;
                 }
 
-                if (rangeFrom == rangeTo)
-                {
-                    continue;
-                }
-
-                // Leave open notes as they are
-                if (note.Fret == (int) FiveFretGuitarFret.Open)
-                {
-                    continue;
-                }
-
-                // Change the fret and mask according to the new range
-                note.Fret -= shiftAmount;
+                int shiftAmount = firstRange - shifts[shiftIndex].Range;
                 if (shiftAmount > 0)
                 {
-                    note.NoteMask >>= shiftAmount;
-                    note.DisjointMask >>= shiftAmount;
-                }
-                else
-                {
-                    note.NoteMask <<= shiftAmount;
-                    note.DisjointMask <<= shiftAmount;
-                }
+                    int maxFretAllowed = (int)FiveFretGuitarFret.Orange - shiftAmount;
 
-
-                // Shift child notes
-                for (int j = 0; j < note.ChildNotes.Count; j++)
-                {
-                    var child = note.ChildNotes[j];
-                    child.Fret -= shiftAmount;
-                    if (shiftAmount > 0)
+                    for (int j = 0; j < note.ChildNotes.Count;)
                     {
-                        child.NoteMask >>= shiftAmount;
-                        child.DisjointMask >>= shiftAmount;
-                    }
-                    else
-                    {
-                        child.NoteMask <<= shiftAmount;
-                        child.DisjointMask <<= shiftAmount;
-                    }
-                }
+                        var child = note.ChildNotes[j];
+                        if (child.Fret != (int) FiveFretGuitarFret.Open)
+                        {
+                            if (child.Fret > maxFretAllowed || note.Tick < laneEndTicks[child.Fret + shiftAmount])
+                            {
+                                note.NoteMask &= ~child.NoteMask;
+                                note.DisjointMask &= ~child.DisjointMask;
+                                note.ChildNotes.RemoveAt(j);
+                                continue;
+                            }
 
-                // Check for validity of (possible) parent and remove if off track, reparenting children as necessary
-                var count = note.ChildNotes.Count + 1;
-                bool outOfRange = false;
-
-                foreach (var chordNote in note.AllNotes)
-                {
-                    if (chordNote.Fret is < (int) FiveFretGuitarFret.Green or > (int) FiveFretGuitarFret.Orange)
-                    {
-                        outOfRange = true;
-                    }
-                }
-
-                if (!outOfRange)
-                {
-                    continue;
-                }
-
-                // Check if parent is out of range, replacing parent with a child if so, and keep doing
-                // that until we get a parent that is in range or we run out of children
-                while (note.Fret is < (int) FiveFretGuitarFret.Green or > (int) FiveFretGuitarFret.Orange)
-                {
-                    difficulty.Notes.RemoveNoteAt(i);
-
-                    if (count == 0)
-                    {
-                        // Parent and all children have been removed, so we're done
-                        break;
+                            child.Fret += shiftAmount;
+                            child.NoteMask <<= shiftAmount;
+                            child.DisjointMask <<= shiftAmount;
+                        }
+                        ++j;
                     }
 
-                    note = difficulty.Notes[i];
-                    count--;
-                }
-
-                if (count == 0)
-                {
-                    // We ended up deleting all the notes, so we need to start again using the same i
-                    i--;
-                    continue;
-                }
-
-                // Now check that any remaining children are in range and remove if not
-                // It should be noted that when shifting down (towards green), this is the part
-                // that really does all the work since the parent is actually the high note of the chord
-                for (int j = 0; j < note.ChildNotes.Count; j++)
-                {
-                    if (note.ChildNotes[j].Fret is < 1 or > 5)
+                    if (note.Fret != (int) FiveFretGuitarFret.Open &&
+                        (note.Fret > maxFretAllowed || note.Tick < laneEndTicks[note.Fret - shiftAmount]))
                     {
-                        difficulty.Notes.RemoveChildFromNote(i, j);
-                    }
-                }
-
-                // If we're here, we are working with a broken chart, so we should check for overlapping sustains
-
-                // There is no previous note, so an overlapping sustain isn't possible
-                if (i == 0)
-                {
-                    continue;
-                }
-
-                // Now that we know what the final note (group) for this index is, make sure any previous sustain
-                // doesn't overlap with the current note
-                if ((note.NoteMask & difficulty.Notes[i - 1].NoteMask) == 0)
-                {
-                    // Previous and current share no notes, so we're done
-                    continue;
-                }
-
-                // Cut off sustains that would overlap
-                foreach (var prevNote in difficulty.Notes[i-1].AllNotes)
-                {
-                    if (!prevNote.IsSustain)
-                    {
-                        continue;
-                    }
-
-                    foreach (var child in note.AllNotes)
-                    {
-                        if (prevNote.Fret != child.Fret)
+                        // This will automatically create a mask with all the frets pre-shifted
+                        // if child notes still exist.
+                        difficulty.Notes.RemoveNoteAt(noteIndex);
+                        if (note.ChildNotes.Count == 0)
                         {
                             continue;
                         }
-
-                        if (prevNote.Tick + prevNote.TickLength > child.Tick)
+                        note = difficulty.Notes[noteIndex];
+                    }
+                    else
+                    {
+                        if (note.Fret != (int) FiveFretGuitarFret.Open)
                         {
-                            prevNote.TickLength = child.Tick - prevNote.Tick;
+                            note.Fret += shiftAmount;
+                        }
+
+                        if ((note.NoteMask & GuitarEngine.OPEN_MASK) != 0)
+                        {
+                            note.NoteMask     = ((note.NoteMask     & ~GuitarEngine.OPEN_MASK) << shiftAmount) | GuitarEngine.OPEN_MASK;
+                            note.DisjointMask = ((note.DisjointMask & ~GuitarEngine.OPEN_MASK) << shiftAmount) | GuitarEngine.OPEN_MASK;
+                        }
+                        else
+                        {
+                            note.NoteMask <<= shiftAmount;
+                            note.DisjointMask <<= shiftAmount;
                         }
                     }
                 }
+                else if (shiftAmount < 0)
+                {
+                    shiftAmount = -shiftAmount;
+                    int minFretAllowed = (int)FiveFretGuitarFret.Green + shiftAmount;
+
+                    for (int j = 0; j < note.ChildNotes.Count;)
+                    {
+                        var child = note.ChildNotes[j];
+                        if (child.Fret != (int) FiveFretGuitarFret.Open)
+                        {
+                            if (child.Fret < minFretAllowed || note.Tick < laneEndTicks[child.Fret - shiftAmount])
+                            {
+                                note.NoteMask &= ~child.NoteMask;
+                                note.DisjointMask &= ~child.DisjointMask;
+                                note.ChildNotes.RemoveAt(j);
+                                continue;
+                            }
+
+                            child.Fret -= shiftAmount;
+                            child.NoteMask >>= shiftAmount;
+                            child.DisjointMask >>= shiftAmount;
+                        }
+                        ++j;
+                    }
+
+                    if (note.Fret != (int) FiveFretGuitarFret.Open &&
+                        (note.Fret < minFretAllowed || note.Tick < laneEndTicks[note.Fret - shiftAmount]))
+                    {
+                        // This will automatically create a mask with all the frets pre-shifted
+                        // if child notes still exist.
+                        difficulty.Notes.RemoveNoteAt(noteIndex);
+                        if (note.ChildNotes.Count == 0)
+                        {
+                            continue;
+                        }
+                        note = difficulty.Notes[noteIndex];
+                    }
+                    else
+                    {
+                        if (note.Fret != (int) FiveFretGuitarFret.Open)
+                        {
+                            note.Fret -= shiftAmount;
+                        }
+
+                        if ((note.NoteMask & GuitarEngine.OPEN_MASK) != 0)
+                        {
+                            note.NoteMask     = ((note.NoteMask     & ~GuitarEngine.OPEN_MASK) >> shiftAmount) | GuitarEngine.OPEN_MASK;
+                            note.DisjointMask = ((note.DisjointMask & ~GuitarEngine.OPEN_MASK) >> shiftAmount) | GuitarEngine.OPEN_MASK;
+                        }
+                        else
+                        {
+                            note.NoteMask >>= shiftAmount;
+                            note.DisjointMask >>= shiftAmount;
+                        }
+                    }
+                }
+
+                // Don't add the trackers for open fret
+                if (note.Fret != (int) FiveFretGuitarFret.Open)
+                {
+                    laneEndTicks[note.Fret] = note.Tick + note.TickLength;
+                }
+
+                foreach (var childNote in note.ChildNotes)
+                {
+                    if (note.Fret != (int) FiveFretGuitarFret.Open)
+                    {
+                        laneEndTicks[childNote.Fret] = note.Tick + childNote.TickLength;
+                    }
+                }
+                ++noteIndex;
             }
+
+            shifts.RemoveRange(1, shifts.Count - 1);
         }
 
         public static void RemoveKickDrumNotes(this InstrumentDifficulty<DrumNote> difficulty)
