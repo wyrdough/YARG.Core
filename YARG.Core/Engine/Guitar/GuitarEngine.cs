@@ -128,6 +128,12 @@ namespace YARG.Core.Engine.Guitar
                 return;
             }
 
+            // Cancel overstrum during active coda
+            if (IsCodaActive)
+            {
+                return;
+            }
+
             // Cancel overstrum if WaitCountdown is active
             if (IsWaitCountdownActive)
             {

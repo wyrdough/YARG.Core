@@ -145,6 +145,12 @@ namespace YARG.Core.Engine.Guitar.Engines
             // This is up here so overstrumming still works when there are no notes left
             if (HasStrummed)
             {
+                // If during a coda, we need to collect lane score for held frets
+                if (IsCodaActive)
+                {
+                    HandleCodaFretChange(time);
+                }
+
                 // Hopo was hit recently, eat strum input
                 if (HopoLeniencyTimer.IsActive)
                 {
@@ -161,11 +167,7 @@ namespace YARG.Core.Engine.Guitar.Engines
                     // Strummed while strum leniency is active (double strum)
                     if (StrumLeniencyTimer.IsActive)
                     {
-                        // Not sure if this call actually needs to be protected
-                        if (!IsCodaActive)
-                        {
-                            Overstrum();
-                        }
+                        Overstrum();
                     }
                 }
 
@@ -258,6 +260,11 @@ namespace YARG.Core.Engine.Guitar.Engines
             byte changed = (byte) 0;
             byte pressed = (byte) 0;
 
+            for (int i = 0; i < fretMask.Length; i++)
+            {
+                fretMask[i] = (byte) (1 << i);
+            }
+
             // If there was a strum, hit held frets
             if (HasStrummed)
             {
@@ -265,17 +272,18 @@ namespace YARG.Core.Engine.Guitar.Engines
             }
             else
             {
-                for (int i = 0; i < fretMask.Length; i++)
-                {
-                    fretMask[i] = (byte) (1 << i);
-                }
-
-                // If there was a fret press this update, we have to tell the CodaSection about it
-                if (IsFretPress)
+                // If there was a fret press this update, we have to tell the CodaSection about it,
+                // but only if only solo buttons are pressed.
+                if (IsFretPress && !StandardButtonHeld)
                 {
                     // Figure out which button was pressed
                     changed = (byte) (EffectiveButtonMask ^ LastButtonMask);
                     pressed = (byte) (changed & EffectiveButtonMask);
+                }
+                else
+                {
+                    // Regular buttons must be strummed to collect coda bonus
+                    return;
                 }
             }
 
@@ -579,10 +587,7 @@ namespace YARG.Core.Engine.Guitar.Engines
                 if (StrumLeniencyTimer.IsExpired(CurrentTime))
                 {
                     //YargTrace.LogInfo("Strum Leniency: Expired. Overstrumming");
-                    if (!IsCodaActive)
-                    {
-                        Overstrum();
-                    }
+                    Overstrum();
 
                     StrumLeniencyTimer.Disable();
 
