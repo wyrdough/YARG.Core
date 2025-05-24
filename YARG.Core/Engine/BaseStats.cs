@@ -47,6 +47,11 @@ namespace YARG.Core.Engine
         public int MultiplierScore;
 
         /// <summary>
+        /// Total score earned from band bonus
+        /// </summary>
+        public int BandBonusScore;
+
+        /// <summary>
         /// The score used to calculate star progress.
         /// </summary>
         /// <remarks>
@@ -79,6 +84,11 @@ namespace YARG.Core.Engine
         /// The player's current score multiplier (e.g 2x, 3x)
         /// </summary>
         public int ScoreMultiplier;
+
+        /// <summary>
+        /// Additional score multiplier from band member SP activation
+        /// </summary>
+        public int BandBonusMultiplier;
 
         /// <summary>
         /// Number of notes which have been hit.

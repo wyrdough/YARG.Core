@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using YARG.Core.Chart;
+using YARG.Core.Engine.Vocals;
 using YARG.Core.Logging;
 
 namespace YARG.Core.Engine
@@ -9,22 +10,11 @@ namespace YARG.Core.Engine
     public partial class EngineManager
     {
         private          int                              _nextEngineIndex;
-        private readonly List <EngineContainer>           _allEngines     = new();
-        private readonly Dictionary<int, EngineContainer> _allEnginesById = new();
+        private readonly List <EngineContainer>           _allEngines       = new();
+        private readonly Dictionary<int, EngineContainer> _allEnginesById   = new();
+        private          Band                             _band             = new();
 
         public List<EngineContainer> Engines => _allEngines;
-
-        public class Band
-        {
-            public List<EngineContainer> Engines { get; private set; }
-            public int Score { get; private set; }
-
-            private Band()
-            {
-                Engines = new List<EngineContainer>();
-                Score = 0;
-            }
-        }
 
         public partial class EngineContainer
         {
@@ -93,6 +83,8 @@ namespace YARG.Core.Engine
 
             _allEngines.Add(engineContainer);
             _allEnginesById.Add(engineContainer.EngineId, engineContainer);
+            _band.AddEngine(engineContainer);
+
             AddPlayerToUnisons(engineContainer);
 
             return engineContainer;

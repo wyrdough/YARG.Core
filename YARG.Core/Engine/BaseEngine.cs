@@ -809,5 +809,14 @@ namespace YARG.Core.Engine
             GainStarPower(TicksPerQuarterSpBar);
             OnUnisonBonusAwarded?.Invoke();
         }
+
+        public void UpdateBandMultiplier(int multiplier)
+        {
+            multiplier = Math.Max(1, multiplier);
+            multiplier -= BaseStats.IsStarPowerActive ? 2 : 1;
+            BaseStats.BandBonusMultiplier = multiplier;
+        }
+
+        public abstract void AwardCodaBonus();
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using YARG.Core.Chart;
@@ -430,7 +430,6 @@ namespace YARG.Core.Engine
             // If this is the last note of the chart and there was a successful coda, award coda bonus
             if (CodaHasStarted && NoteIndex == Notes.Count - 1 && Codas[CurrentCodaIndex - 1].Success)
             {
-                EngineStats.CodaBonuses += Codas[CurrentCodaIndex - 1].TotalCodaBonus;
                 OnCodaEnd?.Invoke(Codas[CurrentCodaIndex - 1]);
             }
 
@@ -632,6 +631,10 @@ namespace YARG.Core.Engine
             {
                 EngineStats.MultiplierScore += scoreMultiplier - score;
             }
+
+            // BandBonusMultiplier will be 0 when no other players have SP active, so no need to branch here
+            EngineStats.BandBonusScore += EngineStats.BandBonusMultiplier * scoreMultiplier;
+
             UpdateStars();
         }
 
@@ -1205,6 +1208,11 @@ namespace YARG.Core.Engine
             }
 
             return codaSections;
+        }
+
+        public override void AwardCodaBonus()
+        {
+            EngineStats.CodaBonuses += Codas[CurrentCodaIndex - 1].TotalCodaBonus;
         }
 
         protected void GetWaitCountdowns(List<TNoteType> notes)
