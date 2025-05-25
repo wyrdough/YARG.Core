@@ -27,9 +27,10 @@ namespace YARG.Core.Engine
         /// Total score across all score values.
         /// </summary>
         /// <remarks>
-        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, <see cref="SoloBonuses"/>, and <see cref="CodaBonuses"/>.
+        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, <see cref="SoloBonuses"/>,
+        /// <see cref="CodaBonuses"/> and <see cref="BandBonusScore"/>.
         /// </remarks>
-        public int TotalScore => CommittedScore + PendingScore + SoloBonuses + CodaBonuses;
+        public int TotalScore => CommittedScore + PendingScore + SoloBonuses + CodaBonuses + BandBonusScore;
 
         /// <summary>
         /// Total score earned from hitting notes.
