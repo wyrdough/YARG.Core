@@ -138,7 +138,7 @@ namespace YARG.Core.Engine
 
         protected bool ReRunHitLogic;
 
-        protected readonly bool IsBot;
+        protected internal readonly bool IsBot;
 
         protected int CurrentSyncIndex;
 
@@ -504,7 +504,7 @@ namespace YARG.Core.Engine
             return BaseStats.StarPowerTickAmount / (double) TicksPerFullSpBar;
         }
 
-        protected void ActivateStarPower()
+        public void ActivateStarPower()
         {
             if (BaseStats.IsStarPowerActive)
             {

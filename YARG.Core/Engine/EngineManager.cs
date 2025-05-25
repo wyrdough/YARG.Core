@@ -27,6 +27,7 @@ namespace YARG.Core.Engine
             public enum EngineCommandType
             {
                 AwardUnisonBonus,
+                ActivateStarPower,
             }
 
             private struct EngineCommand
