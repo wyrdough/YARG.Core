@@ -107,6 +107,10 @@ namespace YARG.Core.Engine
             Success = true;
             // TODO: Make sure we really need this
             TotalCodaBonus = earnedBonus;
+
+            // loop o new array? either seems sus
+            LastCollectedTime = new double[Lanes];
+            LastHitTime = new double[Lanes];
         }
 
         public int GetCurrentLaneScore(int fret, double time)

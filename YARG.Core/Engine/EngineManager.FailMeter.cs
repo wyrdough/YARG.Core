@@ -185,6 +185,16 @@ namespace YARG.Core.Engine
                     vocalsEngine.OnStarPowerStatus += OnStarpowerStatus;
                 }
             }
+
+            public void UpdateBandMultiplier(int multiplier)
+            {
+                Engine.UpdateBandMultiplier(multiplier);
+            }
+
+            public void AwardCodaBonus()
+            {
+                Engine.AwardCodaBonus();
+            }
         }
     }
 }

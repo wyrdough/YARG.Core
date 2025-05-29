@@ -27,9 +27,10 @@ namespace YARG.Core.Engine
         /// Total score across all score values.
         /// </summary>
         /// <remarks>
-        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, <see cref="SoloBonuses"/>, and <see cref="CodaBonuses"/>.
+        /// Calculated from <see cref="CommittedScore"/>, <see cref="PendingScore"/>, <see cref="SoloBonuses"/>,
+        /// <see cref="CodaBonuses"/> and <see cref="BandBonusScore"/>.
         /// </remarks>
-        public int TotalScore => CommittedScore + PendingScore + SoloBonuses + CodaBonuses;
+        public int TotalScore => CommittedScore + PendingScore + SoloBonuses + CodaBonuses + BandBonusScore;
 
         /// <summary>
         /// Total score earned from hitting notes.
@@ -45,6 +46,11 @@ namespace YARG.Core.Engine
         /// Total score earned from score multipliers.
         /// </summary>
         public int MultiplierScore;
+
+        /// <summary>
+        /// Total score earned from band bonus
+        /// </summary>
+        public int BandBonusScore;
 
         /// <summary>
         /// The score used to calculate star progress.
@@ -79,6 +85,11 @@ namespace YARG.Core.Engine
         /// The player's current score multiplier (e.g 2x, 3x)
         /// </summary>
         public int ScoreMultiplier;
+
+        /// <summary>
+        /// Additional score multiplier from band member SP activation
+        /// </summary>
+        public int BandBonusMultiplier;
 
         /// <summary>
         /// Number of notes which have been hit.

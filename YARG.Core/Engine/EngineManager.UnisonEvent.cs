@@ -297,6 +297,14 @@ namespace YARG.Core.Engine
                     }
                 }
             }
+
+            // TODO: Make a game setting that instead forces bots to follow player's SP activation
+            if (container.Engine.IsBot && container.Engine.CanStarPowerActivate &&
+                container.Engine is not BaseEngine<DrumNote, DrumsEngineParameters, DrumsStats>
+                    or BaseEngine<VocalNote, VocalsEngineParameters, VocalsStats>)
+            {
+                container.Engine.ActivateStarPower();
+            }
         }
 
         private void AwardStarPowerBonus(UnisonEvent unison)
