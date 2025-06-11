@@ -127,7 +127,8 @@ namespace YARG.Core.Engine.Drums.Engines
 
         protected override bool CanNoteBeHit(DrumNote note)
         {
-            return note.Pad == PadHit;
+            // Doesn't matter if 4 lane or 5 lane when checking for wildcard since they have the same int value
+            return note.Pad == PadHit || (PadHit != null && note.Pad == (int) FourLaneDrumPad.Wildcard);
         }
 
         protected override void UpdateBot(double time)

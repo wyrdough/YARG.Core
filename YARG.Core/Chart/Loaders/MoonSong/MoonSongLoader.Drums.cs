@@ -22,14 +22,22 @@ namespace YARG.Core.Chart
 
         private InstrumentTrack<DrumNote> LoadDrumsTrack(Instrument instrument, CreateNoteDelegate<DrumNote> createNote)
         {
-            var difficulties = new Dictionary<Difficulty, InstrumentDifficulty<DrumNote>>()
+            Dictionary<Difficulty, InstrumentDifficulty<DrumNote>> difficulties = new();
+            if (instrument is Instrument.FourLaneDrums)
             {
-                { Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, HandleTextEvent) },
-                { Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, HandleTextEvent) },
-                { Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, HandleTextEvent) },
-                { Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote, HandleTextEvent) },
-                { Difficulty.ExpertPlus, LoadDifficulty(instrument, Difficulty.ExpertPlus, createNote, HandleTextEvent) },
-            };
+                difficulties.Add(Difficulty.Beginner, LoadDifficulty(instrument, Difficulty.Easy, CreateFourLaneDrumBeginnerNote, HandleTextEvent));
+            }
+            else if (instrument is Instrument.FiveLaneDrums)
+            {
+                difficulties.Add(Difficulty.Beginner, LoadDifficulty(instrument, Difficulty.Easy, CreateFiveLaneDrumBeginnerNote, HandleTextEvent));
+            }
+
+            difficulties.Add(Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, HandleTextEvent));
+            difficulties.Add(Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, HandleTextEvent));
+            difficulties.Add(Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, HandleTextEvent));
+            difficulties.Add(Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote, HandleTextEvent));
+            difficulties.Add(Difficulty.ExpertPlus, LoadDifficulty(instrument, Difficulty.ExpertPlus, createNote, HandleTextEvent));
+
             return new(instrument, difficulties);
         }
 
@@ -48,6 +56,28 @@ namespace YARG.Core.Chart
         {
             var pad = GetFiveLaneDrumPad(moonNote);
             var noteType = GetDrumNoteType(moonNote);
+            var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
+            var drumFlags = GetDrumNoteFlags(moonNote, currentPhrases);
+
+            double time = _moonSong.TickToTime(moonNote.tick);
+            return new DrumNote(pad, noteType, drumFlags, generalFlags, time, moonNote.tick);
+        }
+
+        private DrumNote CreateFourLaneDrumBeginnerNote(MoonNote moonNote, Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)
+        {
+            var pad = FourLaneDrumPad.Wildcard;
+            var noteType = DrumNoteType.Neutral;
+            var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
+            var drumFlags = GetDrumNoteFlags(moonNote, currentPhrases);
+
+            double time = _moonSong.TickToTime(moonNote.tick);
+            return new DrumNote(pad, noteType, drumFlags, generalFlags, time, moonNote.tick);
+        }
+
+        private DrumNote CreateFiveLaneDrumBeginnerNote(MoonNote moonNote, Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)
+        {
+            var pad = FiveLaneDrumPad.Wildcard;
+            var noteType = DrumNoteType.Neutral;
             var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
             var drumFlags = GetDrumNoteFlags(moonNote, currentPhrases);
 
