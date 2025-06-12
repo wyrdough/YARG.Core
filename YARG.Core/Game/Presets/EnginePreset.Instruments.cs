@@ -208,7 +208,7 @@ namespace YARG.Core.Game
 
             [SettingType(SettingType.Slider)]
             [SettingRange(0f, 1f)]
-            public float HitPercentB = 0.325f;  // Same as beginner, to encourage people to sing at appropriate times
+            public float HitPercentB = 0.225f;
 
             [SettingType(SettingType.Slider)]
             [SettingRange(0f, 1f)]
