@@ -21,6 +21,7 @@ namespace YARG.Core.Chart
         {
             var difficulties = new Dictionary<Difficulty, InstrumentDifficulty<GuitarNote>>()
             {
+                { Difficulty.Beginner, LoadDifficulty(instrument, Difficulty.Beginner, CreateFiveFretBeginnerNote, null, ValidateGuitarPhrase) },
                 { Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, null, ValidateGuitarPhrase) },
                 { Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, null, ValidateGuitarPhrase) },
                 { Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, null, ValidateGuitarPhrase) },
@@ -38,6 +39,21 @@ namespace YARG.Core.Chart
 
             double time = _moonSong.TickToTime(moonNote.tick);
             return new GuitarNote(fret, noteType, guitarFlags, generalFlags, time, GetLengthInTime(moonNote), moonNote.tick, moonNote.length);
+        }
+
+        private GuitarNote CreateFiveFretBeginnerNote(MoonNote moonNote,
+            Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)
+        {
+            // Beginner is always wildcard, always strum, and never a sustain
+            var fret = FiveFretGuitarFret.Wildcard;
+            var noteType = GuitarNoteType.Strum;
+            var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
+            var guitarFlags = GuitarNoteFlags.None; // No we can't be disjoint or an extended sustain
+
+            double time = _moonSong.TickToTime(moonNote.tick);
+
+            // TODO: figure out how to properly specify timeLength and tickLength here
+            return new GuitarNote((FiveFretGuitarFret) fret, noteType, guitarFlags, generalFlags, time, 0.0001, moonNote.tick, 1);
         }
 
         private GuitarNote CreateSixFretGuitarNote(MoonNote moonNote, Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)

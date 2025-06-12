@@ -71,7 +71,8 @@ namespace YARG.Core.Song
                     else if ((statusBitMask & statusMask) > 0)
                     {
                         validations |= diffMask;
-                        if (validations == MidiPreparser_Constants.ALL_DIFFICULTIES)
+                        // Can't use ALL_DIFFICULTIES_PLUS here, as it includes X+, which is drums only
+                        if (validations == (MidiPreparser_Constants.ALL_DIFFICULTIES | DifficultyMask.Beginner))
                         {
                             break;
                         }
@@ -109,6 +110,14 @@ namespace YARG.Core.Song
                     }
                 }
             }
+
+            // Check if validations contains DifficultyMask.Easy
+            if ((validations & DifficultyMask.Easy) > 0)
+            {
+                // If easy is present, we can generate beginner from easy, so add beginner to the mask
+                validations |= DifficultyMask.Beginner;
+            }
+
             return validations;
         }
     }

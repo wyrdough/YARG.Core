@@ -10,7 +10,7 @@ namespace YARG.Core.Chart
         private bool _discoFlip = false;
 
         private uint _lastLanePhraseTick;
-        private List<int>? _validLaneNotes = null; 
+        private List<int>? _validLaneNotes = null;
 
         public InstrumentTrack<DrumNote> LoadDrumsTrack(Instrument instrument)
         {
@@ -25,14 +25,22 @@ namespace YARG.Core.Chart
 
         private InstrumentTrack<DrumNote> LoadDrumsTrack(Instrument instrument, CreateNoteDelegate<DrumNote> createNote)
         {
-            var difficulties = new Dictionary<Difficulty, InstrumentDifficulty<DrumNote>>()
+            Dictionary<Difficulty, InstrumentDifficulty<DrumNote>> difficulties = new();
+            if (instrument is Instrument.FourLaneDrums)
             {
-                { Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, HandleTextEvent, ValidateDrumsPhrase) },
-                { Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, HandleTextEvent, ValidateDrumsPhrase) },
-                { Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, HandleTextEvent, ValidateDrumsPhrase) },
-                { Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote, HandleTextEvent, ValidateDrumsPhrase) },
-                { Difficulty.ExpertPlus, LoadDifficulty(instrument, Difficulty.ExpertPlus, createNote, HandleTextEvent, ValidateDrumsPhrase) },
-            };
+                difficulties.Add(Difficulty.Beginner, LoadDifficulty(instrument, Difficulty.Easy, CreateFourLaneDrumBeginnerNote, HandleTextEvent, ValidateDrumsPhrase));
+            }
+            else if (instrument is Instrument.FiveLaneDrums)
+            {
+                difficulties.Add(Difficulty.Beginner, LoadDifficulty(instrument, Difficulty.Easy, CreateFiveLaneDrumBeginnerNote, HandleTextEvent, ValidateDrumsPhrase));
+            }
+
+            difficulties.Add(Difficulty.Easy, LoadDifficulty(instrument, Difficulty.Easy, createNote, HandleTextEvent, ValidateDrumsPhrase));
+            difficulties.Add(Difficulty.Medium, LoadDifficulty(instrument, Difficulty.Medium, createNote, HandleTextEvent, ValidateDrumsPhrase));
+            difficulties.Add(Difficulty.Hard, LoadDifficulty(instrument, Difficulty.Hard, createNote, HandleTextEvent, ValidateDrumsPhrase));
+            difficulties.Add(Difficulty.Expert, LoadDifficulty(instrument, Difficulty.Expert, createNote, HandleTextEvent, ValidateDrumsPhrase));
+            difficulties.Add(Difficulty.ExpertPlus, LoadDifficulty(instrument, Difficulty.ExpertPlus, createNote, HandleTextEvent, ValidateDrumsPhrase));
+
             return new(instrument, difficulties);
         }
 
@@ -62,6 +70,28 @@ namespace YARG.Core.Chart
 
             double time = _moonSong.TickToTime(moonNote.tick);
             return new DrumNote(pad, noteType, drumFlags, generalFlags, time, moonNote.tick);
+        }
+
+        private DrumNote CreateFourLaneDrumBeginnerNote(MoonNote moonNote, Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)
+        {
+            var pad = FourLaneDrumPad.Wildcard;
+            var noteType = DrumNoteType.Neutral;
+            var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
+            var drumFlags = GetDrumNoteFlags(moonNote, currentPhrases);
+
+            double time = _moonSong.TickToTime(moonNote.tick);
+            return new DrumNote((FourLaneDrumPad) pad, noteType, drumFlags, generalFlags, time, moonNote.tick);
+        }
+
+        private DrumNote CreateFiveLaneDrumBeginnerNote(MoonNote moonNote, Dictionary<MoonPhrase.Type, MoonPhrase> currentPhrases)
+        {
+            var pad = FiveLaneDrumPad.Wildcard;
+            var noteType = DrumNoteType.Neutral;
+            var generalFlags = GetGeneralFlags(moonNote, currentPhrases);
+            var drumFlags = GetDrumNoteFlags(moonNote, currentPhrases);
+
+            double time = _moonSong.TickToTime(moonNote.tick);
+            return new DrumNote((FiveLaneDrumPad) pad, noteType, drumFlags, generalFlags, time, moonNote.tick);
         }
 
         private void HandleTextEvent(MoonText text)
@@ -365,11 +395,11 @@ namespace YARG.Core.Chart
                 // Iterate forward every note in this phrase to find the notes that appear the most
                 // Assumes that this will only run when the first note in a phrase is provided
                 Dictionary<int,int> noteTotals = new();
-                
+
                 // Stop searching if the current note value has this much of a lead over the others
                 const int CLINCH_THRESHOLD = 5;
                 int highestTotal = 0;
-                
+
                 for (var noteRef = moonNote; noteRef != null && IsEventInPhrase(noteRef, lanePhrase); noteRef = noteRef.next)
                 {
                     if (noteRef.isChord && noteRef.drumPad == MoonNote.DrumPad.Kick)

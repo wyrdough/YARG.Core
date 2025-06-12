@@ -13,8 +13,10 @@ namespace YARG.Core.Game
         private static readonly Color DefaultYellow = Color.FromArgb(0xFF, 0xFF, 0xE9, 0x00); // #FFE900
         private static readonly Color DefaultBlue   = Color.FromArgb(0xFF, 0x00, 0xBF, 0xFF); // #00BFFF
         private static readonly Color DefaultOrange = Color.FromArgb(0xFF, 0xFF, 0x84, 0x00); // #FF8400
+        private static readonly Color DefaultWildcard = Color.FromArgb(0xFF, 0xFF, 0x84, 0x00); // #FF8400 (same as orange)
 
-        private static readonly Color DefaultStarpower = Color.White; // #FFFFFF
+        private static readonly Color DefaultStarpower  = Color.White; // #FFFFFF
+        private static readonly Color DefaultWildcardStarpower = Color.FromArgb(0xFF, 0xFF, 0x80, 0xFF);
 
         #endregion
 
@@ -67,6 +69,7 @@ namespace YARG.Core.Game
                 YellowNote = CircularYellow,
                 BlueNote   = CircularBlue,
                 OrangeNote = CircularOrange,
+                WildcardNote = DefaultWildcard,
 
                 OpenNoteStarPower   = CircularStarpower,
                 GreenNoteStarPower  = CircularStarpower,
@@ -74,6 +77,7 @@ namespace YARG.Core.Game
                 YellowNoteStarPower = CircularStarpower,
                 BlueNoteStarPower   = CircularStarpower,
                 OrangeNoteStarPower = CircularStarpower,
+                WildcardStarPower   = DefaultWildcardStarpower,
             }
         };
 

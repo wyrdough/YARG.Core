@@ -97,6 +97,7 @@ namespace YARG.Core.Game
             public Color YellowNote = DefaultYellow;
             public Color BlueNote   = DefaultBlue;
             public Color OrangeNote = DefaultOrange;
+            public Color WildcardNote   = DefaultWildcard;
 
             /// <summary>
             /// Gets the note color for a specific note index.
@@ -112,6 +113,7 @@ namespace YARG.Core.Game
                     4 => BlueNote,
                     5 => OrangeNote,
                     (int) FiveFretGuitarFret.Open => OpenNote,
+                    (int) FiveFretGuitarFret.Wildcard => WildcardNote,
                     _ => default
                 };
             }
@@ -122,6 +124,7 @@ namespace YARG.Core.Game
             public Color YellowNoteStarPower = DefaultStarpower;
             public Color BlueNoteStarPower   = DefaultStarpower;
             public Color OrangeNoteStarPower = DefaultStarpower;
+            public Color WildcardStarPower   = DefaultWildcardStarpower;
 
             /// <summary>
             /// Gets the Star Power note color for a specific note index.
@@ -137,6 +140,7 @@ namespace YARG.Core.Game
                     4 => BlueNoteStarPower,
                     5 => OrangeNoteStarPower,
                     (int) FiveFretGuitarFret.Open => OpenNoteStarPower,
+                    (int) FiveFretGuitarFret.Wildcard => WildcardStarPower,
                     _ => default
                 };
             }
@@ -187,6 +191,9 @@ namespace YARG.Core.Game
                 writer.Write(YellowNoteStarPower);
                 writer.Write(BlueNoteStarPower);
                 writer.Write(OrangeNoteStarPower);
+
+                writer.Write(WildcardNote);
+                writer.Write(WildcardStarPower);
             }
 
             public void Deserialize(BinaryReader reader, int version = 0)
@@ -225,6 +232,9 @@ namespace YARG.Core.Game
                 YellowNoteStarPower = reader.ReadColor();
                 BlueNoteStarPower = reader.ReadColor();
                 OrangeNoteStarPower = reader.ReadColor();
+
+                WildcardNote = reader.ReadColor();
+                WildcardStarPower = reader.ReadColor();
             }
 
             #endregion

@@ -3,7 +3,7 @@
     internal static class MidiPreparser_Constants
     {
         public const DifficultyMask ALL_DIFFICULTIES = DifficultyMask.Easy | DifficultyMask.Medium | DifficultyMask.Hard | DifficultyMask.Expert;
-        public const DifficultyMask ALL_DIFFICULTIES_PLUS = ALL_DIFFICULTIES | DifficultyMask.ExpertPlus;
+        public const DifficultyMask ALL_DIFFICULTIES_PLUS = ALL_DIFFICULTIES | DifficultyMask.Beginner | DifficultyMask.ExpertPlus;
 
         public const int DEFAULT_NOTE_MIN = 60;
         public const int DEFAULT_MAX = 100;

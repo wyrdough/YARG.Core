@@ -117,6 +117,8 @@ namespace YARG.Core.Game
                     7 => GreenCymbal,
                     8 => RedCymbal,
 
+                    9 => DefaultWildcard,
+
                     _ => default
                 };
             }
@@ -153,6 +155,8 @@ namespace YARG.Core.Game
                     6 => BlueCymbalStarpower,
                     7 => GreenCymbalStarpower,
                     8 => RedCymbalStarpower,
+
+                    9 => DefaultWildcardStarpower,
 
                     _ => default
                 };

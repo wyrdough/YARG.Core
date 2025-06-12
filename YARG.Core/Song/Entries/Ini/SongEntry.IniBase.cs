@@ -405,7 +405,7 @@ namespace YARG.Core.Song
             };
         }
 
-        private const int GUITAR_FIVEFRET_MAX = 5;
+        private const int GUITAR_FIVEFRET_MAX = 6;
         private const int OPEN_NOTE = 7;
         private static bool ScanFiveFret<TChar>(ref PartValues part, ref YARGTextContainer<TChar> container, Difficulty difficulty)
             where TChar : unmanaged, IEquatable<TChar>, IConvertible
@@ -425,6 +425,12 @@ namespace YARG.Core.Song
                     if (lane < GUITAR_FIVEFRET_MAX || lane == OPEN_NOTE)
                     {
                         part.ActivateDifficulty(difficulty);
+                        if (difficulty == Difficulty.Easy)
+                        {
+                            // If we have activated easy, activate beginner as well since it is automatically
+                            // created from easy.
+                            part.ActivateDifficulty(Difficulty.Beginner);
+                        }
                         return false;
                     }
                 }
