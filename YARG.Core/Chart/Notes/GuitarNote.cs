@@ -96,6 +96,7 @@ namespace YARG.Core.Chart
         Yellow,
         Blue,
         Orange,
+        Wildcard,
         Open = 7,
     }
 

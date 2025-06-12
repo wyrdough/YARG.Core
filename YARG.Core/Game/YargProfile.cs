@@ -201,6 +201,10 @@ namespace YARG.Core.Game
                     {
                         guitarTrack.CompressGuitarRange();
                     }
+                    // else if (track.Difficulty == Difficulty.Easy && CurrentDifficulty == Difficulty.Beginner)
+                    // {
+                    //     guitarTrack.ConvertToBeginner();
+                    // }
 
                     break;
                 case GameMode.FourLaneDrums:

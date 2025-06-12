@@ -256,6 +256,11 @@
         /// <summary>(4-lane only) Green cymbal hit velocity. Red cymbal under lefty flip.</summary>
         /// <remarks>Alias of <see cref="Cymbal3"/>.</remarks>
         GreenCymbal = Cymbal3,
+
+        /// <summary>
+        /// This is fake, it's just here to make the bot not lose its shit when it runs into a wildcard note
+        /// </summary>
+        WildcardPad = 9,
     }
 
     /// <summary>
