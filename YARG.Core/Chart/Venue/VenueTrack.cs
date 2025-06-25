@@ -12,16 +12,18 @@ namespace YARG.Core.Chart
         public List<PostProcessingEvent> PostProcessing { get; } = new();
         public List<PerformerEvent> Performer { get; } = new();
         public List<StageEffectEvent> Stage { get; } = new();
+        public List<CameraCutEvent> CameraCuts { get; } = new();
 
         public VenueTrack() { }
 
         public VenueTrack(List<LightingEvent> lighting, List<PostProcessingEvent> postProcessing,
-            List<PerformerEvent> performer, List<StageEffectEvent> stage)
+            List<PerformerEvent> performer, List<StageEffectEvent> stage, List<CameraCutEvent> cameraCuts)
         {
             Lighting = lighting;
             PostProcessing = postProcessing;
             Performer = performer;
             Stage = stage;
+            CameraCuts = cameraCuts;
         }
 
         public double GetStartTime()
