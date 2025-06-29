@@ -301,7 +301,7 @@ namespace YARG.Core.Chart
             if (currentPhrases.TryGetValue(MoonPhrase.Type.TremoloLane, out var tremolo) && IsEventInPhrase(moonNote, tremolo))
             {
                 flags |= NoteFlags.Tremolo;
-                    
+
                 if (previous == null || !IsEventInPhrase(previous, tremolo))
                 {
                     flags |= NoteFlags.LaneStart;
@@ -407,6 +407,12 @@ namespace YARG.Core.Chart
                 // waste time looking again and it will always be beyond any BRE phrase
                 _codaTime = double.MaxValue;
             }
+        }
+
+        private double GetLengthInTime(MoonAnimation animation)
+        {
+            double time = _moonSong.TickToTime(animation.tick);
+            return GetLengthInTime(time, animation.tick, animation.length);
         }
 
         private static bool IsEventInPhrase(MoonObject songObj, MoonPhrase phrase)
