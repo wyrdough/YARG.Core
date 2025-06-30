@@ -569,7 +569,8 @@ namespace YARG.Core.Chart
                     YargLogger.LogDebug("Invalid range shift event. (Unable to parse size)");
                     continue;
                 }
-                else
+
+                if (splitEvent.Length == 3)
                 {
                     size = eventDifficulty switch
                     {
@@ -577,6 +578,12 @@ namespace YARG.Core.Chart
                         (int) Difficulty.Medium  => 4,
                         _                        => 5,
                     };
+                }
+                else
+                {
+                    // This should not be necessary, the compiler complains if we try to rely on the
+                    // TryParse above even though we would never get here if it failed to initialize size
+                    size = int.Parse(splitEvent[3]);
                 }
 
                 // Further validation
