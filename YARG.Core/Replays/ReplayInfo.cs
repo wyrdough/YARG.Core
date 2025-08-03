@@ -30,13 +30,13 @@ namespace YARG.Core.Replays
 
         public readonly ReplayStats[] Stats;
 
-        public ReplayInfo(string path, string replayName, int replayVersion, int engineVerion, in HashWrapper replayChecksum, string song, string artist, string charter, in HashWrapper songChecksum, in DateTime date, float speed, double length, int score, StarAmount stars, ReplayStats[] stats)
+        public ReplayInfo(string path, string replayName, int replayVersion, int engineVersion, in HashWrapper replayChecksum, string song, string artist, string charter, in HashWrapper songChecksum, in DateTime date, float speed, double length, int score, StarAmount stars, ReplayStats[] stats)
         {
             FilePath = path;
             ReplayName = replayName;
 
             ReplayVersion = replayVersion;
-            EngineVersion = engineVerion;
+            EngineVersion = engineVersion;
             ReplayChecksum = replayChecksum;
 
             SongName = song;
