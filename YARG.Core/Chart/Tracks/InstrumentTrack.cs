@@ -116,6 +116,18 @@ namespace YARG.Core.Chart
             return totalEndTime;
         }
 
+        public double GetLastNoteEndTime()
+        {
+            double endTime = 0;
+
+            foreach (var difficulty in _difficulties.Values)
+            {
+                endTime = Math.Max(difficulty.GetLastNoteEndTime(), endTime);
+            }
+
+            return endTime;
+        }
+
         public uint GetFirstTick()
         {
             uint totalFirstTick = 0;

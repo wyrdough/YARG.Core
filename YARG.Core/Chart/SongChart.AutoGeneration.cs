@@ -194,8 +194,8 @@ namespace YARG.Core.Chart
             }
 
             // Limits for placing activation phrases (in seconds)
-            const float MIN_SPACING_TIME = 2;
-            const float MAX_SPACING_TIME = 10;
+            const double MIN_SPACING_TIME = 2;
+            const double MAX_SPACING_TIME = 10;
 
             // Update this time to the latest SP/Solo/Activation phrase encountered for comparison with the above constants
             // Start parsing after the end of the 1st SP phrase
@@ -537,6 +537,9 @@ namespace YARG.Core.Chart
 
             foreach (var textEvent in instrumentDifficulty.TextEvents)
             {
+                // This ensures that if size is not parseable we will use the default for the difficulty
+                size = -1;
+
                 if (!textEvent.Text.StartsWith("ld_range_shift"))
                 {
                     continue;
@@ -570,8 +573,8 @@ namespace YARG.Core.Chart
                     continue;
                 }
 
-                if (splitEvent.Length == 3)
-                {
+                if (size < 0 || size > 5) {
+                    YargLogger.LogDebug("Range shift event size invalid, using default instead");
                     size = eventDifficulty switch
                     {
                         (int) Difficulty.Easy    => 3,
@@ -590,12 +593,14 @@ namespace YARG.Core.Chart
                 // 1) Is the range index valid
                 if (range < 1 || range > 5)
                 {
+                    YargLogger.LogDebug("Invalid range shift event. (Range is out of bounds)");
                     continue;
                 }
 
                 // 2) Is the size valid for the range index
                 if (range + size > 6)
                 {
+                    YargLogger.LogDebug("Invalid range shift event. (Size is too large for range)");
                     continue;
                 }
 
